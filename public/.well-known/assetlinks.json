@@ -1,1 +1,8 @@
-
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.smartkids_games.twa",
+        "sha256_cert_fingerprints": ["B2:81:35:58:44:12:AF:6F:13:04:B9:7C:F1:59:C7:C0:D7:75:54:87:3A:30:30:D5:89:2C:E5:F2:1E:BE:0A:33"]
+      }
+    }]
