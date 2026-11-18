@@ -1,0 +1,6 @@
+{
+  "name": "Melody Owl",
+  "description": "A playful 3D-style music ear training game for kids with an animated musical owl mascot, synthesized marimba and piano sounds, and three fun listening modes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
