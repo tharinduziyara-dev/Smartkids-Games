@@ -9,6 +9,7 @@ import {
 } from '../types/game';
 import { soundEngine } from '../audio/soundEngine';
 import { AppLanguage, TEXT } from '../i18n/translations';
+import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 
 interface ProfileModalProps {
   profiles: PlayerProfile[];
@@ -31,6 +32,7 @@ export function ProfileModal({
 }: ProfileModalProps) {
   const [newName, setNewName] = useState('');
   const [starterMascot, setStarterMascot] = useState<MascotId>('fairy');
+  const [confirmClose, setConfirmClose] = useState(false);
 
   const t = TEXT[language];
 
@@ -71,7 +73,7 @@ export function ProfileModal({
             type="button"
             onClick={() => {
               soundEngine.playTapPop();
-              onClose();
+              setConfirmClose(true);
             }}
             aria-label="Close players modal"
             style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
@@ -212,6 +214,16 @@ export function ProfileModal({
           </div>
         </div>
       </div>
+
+      <ConfirmCloseDialog
+        open={confirmClose}
+        language={language}
+        onConfirm={() => {
+          setConfirmClose(false);
+          onClose();
+        }}
+        onCancel={() => setConfirmClose(false)}
+      />
     </div>
   );
 }

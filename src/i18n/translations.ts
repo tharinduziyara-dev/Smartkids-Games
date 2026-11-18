@@ -95,6 +95,11 @@ export const TEXT: Record<
       englishModes: string;
       totalStarsCollected: string;
       dressUpSparkle: string;
+      confirmCloseTitle: string;
+      confirmCloseMessage: string;
+      confirmExitGameMessage: string;
+      yes: string;
+      no: string;
     };
     music: {
       modes: Record<
@@ -196,6 +201,7 @@ export const TEXT: Record<
       sinhalaHeader: string;
       sayLabel: string;
       emptyText: string;
+      wordsCount: (count: number) => string;
       categories: Record<DictionaryCategory, string>;
     };
     profiles: {
@@ -371,6 +377,11 @@ export const TEXT: Record<
       englishModes: 'English Modes',
       totalStarsCollected: 'Total Stars Collected',
       dressUpSparkle: 'Dress Up Sparkle in Wardrobe',
+      confirmCloseTitle: 'Are you sure?',
+      confirmCloseMessage: 'Do you want to close this window?',
+      confirmExitGameMessage: 'Do you want to close this game?',
+      yes: 'Yes',
+      no: 'No',
     },
     music: {
       modes: {
@@ -592,6 +603,7 @@ export const TEXT: Record<
       sinhalaHeader: 'සිංහල (Sinhala Meaning)',
       sayLabel: 'Say:',
       emptyText: 'No words available in this category yet.',
+      wordsCount: (count) => `${count} Words`,
       categories: {
         All: 'All',
         Animals: 'Animals',
@@ -845,6 +857,11 @@ export const TEXT: Record<
       englishModes: 'ඉංග්‍රීසි ක්‍රීඩා',
       totalStarsCollected: 'මුළු තරු ගණන',
       dressUpSparkle: 'ඇඳුම් පෙට්ටියෙන් සුරංගනාවි සරසන්න',
+      confirmCloseTitle: 'ඔබට විශ්වාසද?',
+      confirmCloseMessage: 'ඔබට මෙය වැසීමට අවශ්‍යද?',
+      confirmExitGameMessage: 'ඔබට මෙම ක්‍රීඩාවෙන් ඉවත් වීමට අවශ්‍යද?',
+      yes: 'ඔව්',
+      no: 'නැහැ',
     },
     music: {
       modes: {
@@ -1067,6 +1084,7 @@ export const TEXT: Record<
       sinhalaHeader: 'සිංහල තේරුම',
       sayLabel: 'කියන්න:',
       emptyText: 'මෙම කාණ්ඩයේ වචන තවම නැත.',
+      wordsCount: (count) => `වචන ${count}`,
       categories: {
         All: 'සියල්ල',
         Animals: 'සතුන්',

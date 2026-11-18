@@ -75,19 +75,19 @@ class SoundEngine {
   public playChord(
     freqs: number[],
     instrument: InstrumentType = 'piano',
-    duration = 1.2
+    duration = 1.45
   ): void {
     const ctx = this.ensureContext();
     if (!ctx || !this.masterGain || this.muted || freqs.length === 0) return;
 
     const now = ctx.currentTime;
-    // Slight gain trim for multi-note polyphony so chords stay clean and warm
+    // Balanced gain trim for multi-note polyphony so piano & marimba chords ring warmly
     const chordBus = ctx.createGain();
-    chordBus.gain.value = Math.min(0.85, 1.35 / Math.sqrt(freqs.length));
+    chordBus.gain.value = Math.min(0.92, 1.45 / Math.sqrt(freqs.length));
     chordBus.connect(this.masterGain);
 
     freqs.forEach((freq, idx) => {
-      const start = now + idx * 0.018; // subtle 18ms bloom
+      const start = now + idx * 0.02; // gentle acoustic piano chord roll
       if (instrument === 'marimba') {
         this.playMarimbaNote(ctx, chordBus, freq, start, duration);
       } else {
@@ -156,39 +156,68 @@ class SoundEngine {
     startTime: number,
     duration: number
   ): void {
-    const totalDur = Math.max(duration, 1.05);
+    const totalDur = Math.max(duration, 1.35);
 
-    // Gentle lowpass filter for warm acoustic-toy piano brightness
+    // Warm resonant piano body lowpass filter that brightens on hammer strike then softens
     const filter = ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(Math.min(freq * 9, 5200), startTime);
-    filter.frequency.exponentialRampToValueAtTime(Math.max(freq * 2.2, 650), startTime + totalDur * 0.8);
-    filter.Q.value = 0.7;
+    filter.frequency.setValueAtTime(Math.min(freq * 12, 6400), startTime);
+    filter.frequency.exponentialRampToValueAtTime(
+      Math.max(freq * 2.0, 560),
+      startTime + totalDur * 0.72
+    );
+    filter.Q.value = 0.85;
 
     const noteGain = ctx.createGain();
     noteGain.gain.setValueAtTime(0.0001, startTime);
-    noteGain.gain.linearRampToValueAtTime(0.45, startTime + 0.007);
-    noteGain.gain.exponentialRampToValueAtTime(0.16, startTime + 0.28);
+    noteGain.gain.linearRampToValueAtTime(0.54, startTime + 0.005);
+    noteGain.gain.exponentialRampToValueAtTime(0.24, startTime + 0.22);
     noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + totalDur);
 
     filter.connect(noteGain);
     noteGain.connect(dest);
 
-    // Blend harmonics with slight natural detune
-    const partials: Array<{ ratio: number; type: OscillatorType; amp: number; detune: number }> = [
-      { ratio: 1, type: 'triangle', amp: 0.65, detune: -2 },
-      { ratio: 1, type: 'sine', amp: 0.45, detune: 2 },
-      { ratio: 2, type: 'sine', amp: 0.25, detune: 0 },
-      { ratio: 3, type: 'sine', amp: 0.1, detune: 0 },
+    // Felt hammer strike thump (gives authentic acoustic key attack)
+    const hammerOsc = ctx.createOscillator();
+    const hammerGain = ctx.createGain();
+    hammerOsc.type = 'triangle';
+    hammerOsc.frequency.setValueAtTime(Math.min(freq * 3.2, 1600), startTime);
+    hammerOsc.frequency.exponentialRampToValueAtTime(Math.max(freq * 0.9, 140), startTime + 0.026);
+    hammerGain.gain.setValueAtTime(0.0001, startTime);
+    hammerGain.gain.linearRampToValueAtTime(0.24, startTime + 0.002);
+    hammerGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.032);
+    hammerOsc.connect(hammerGain);
+    hammerGain.connect(dest);
+    hammerOsc.start(startTime);
+    hammerOsc.stop(startTime + 0.045);
+
+    // Rich piano string harmonics with individual natural decay rates
+    const partials: Array<{
+      ratio: number;
+      type: OscillatorType;
+      amp: number;
+      detune: number;
+      decayFactor: number;
+    }> = [
+      { ratio: 1, type: 'triangle', amp: 0.62, detune: -1.8, decayFactor: 1.0 },
+      { ratio: 1, type: 'sine', amp: 0.52, detune: 1.8, decayFactor: 1.0 },
+      { ratio: 2, type: 'sine', amp: 0.34, detune: 0.6, decayFactor: 0.75 },
+      { ratio: 3, type: 'sine', amp: 0.16, detune: -0.8, decayFactor: 0.52 },
+      { ratio: 4, type: 'sine', amp: 0.07, detune: 0.4, decayFactor: 0.36 },
     ];
 
     partials.forEach((p) => {
       const osc = ctx.createOscillator();
       const g = ctx.createGain();
+      const partialDur = Math.max(0.2, totalDur * p.decayFactor);
+
       osc.type = p.type;
       osc.frequency.setValueAtTime(freq * p.ratio, startTime);
       osc.detune.setValueAtTime(p.detune, startTime);
-      g.gain.value = p.amp;
+
+      g.gain.setValueAtTime(p.amp, startTime);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.001, p.amp * 0.05), startTime + partialDur);
+
       osc.connect(g);
       g.connect(filter);
       osc.start(startTime);

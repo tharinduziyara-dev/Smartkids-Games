@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Award, Lock, Star, Trophy, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { PlayerProfile, REWARDS_CATALOG } from '../types/game';
 import { soundEngine } from '../audio/soundEngine';
 import { AppLanguage, TEXT } from '../i18n/translations';
+import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 
 interface RewardsModalProps {
   profile: PlayerProfile;
@@ -15,6 +17,7 @@ export function RewardsModal({
   language = 'en',
   onClose,
 }: RewardsModalProps) {
+  const [confirmClose, setConfirmClose] = useState(false);
   const unlockedSet = new Set(profile.unlockedRewards);
   const unlockedCount = REWARDS_CATALOG.filter((r) => unlockedSet.has(r.id)).length;
   const t = TEXT[language];
@@ -52,7 +55,7 @@ export function RewardsModal({
             type="button"
             onClick={() => {
               soundEngine.playTapPop();
-              onClose();
+              setConfirmClose(true);
             }}
             aria-label="Close rewards"
             style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
@@ -146,6 +149,16 @@ export function RewardsModal({
           </button>
         </div>
       </div>
+
+      <ConfirmCloseDialog
+        open={confirmClose}
+        language={language}
+        onConfirm={() => {
+          setConfirmClose(false);
+          onClose();
+        }}
+        onCancel={() => setConfirmClose(false)}
+      />
     </div>
   );
 }

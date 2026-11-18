@@ -30,6 +30,7 @@ import { MathProblem, generateMathProblem } from '../data/mathProblems';
 import { soundEngine } from '../audio/soundEngine';
 import { MascotStage } from './MascotStage';
 import { AppLanguage, TEXT } from '../i18n/translations';
+import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 
 interface MathStageProps {
   profile: PlayerProfile;
@@ -84,6 +85,7 @@ export function MathStage({
   const [streak, setStreak] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isVictory, setIsVictory] = useState(false);
+  const [confirmExitTarget, setConfirmExitTarget] = useState<'category' | 'home' | null>(null);
 
   const [problem, setProblem] = useState<MathProblem>(() =>
     generateMathProblem(mode, level)
@@ -231,7 +233,7 @@ export function MathStage({
   // Keyboard support
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (externalLocked || e.repeat) return;
+      if (confirmExitTarget !== null || externalLocked || e.repeat) return;
       if (e.key === 'Escape') {
         if (!isVictory) setIsPaused((p) => !p);
         return;
@@ -256,7 +258,7 @@ export function MathStage({
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [externalLocked, isPaused, isVictory, problem.choices, roundResolved, submitAnswer, typedAnswer, useKeypad]);
+  }, [confirmExitTarget, externalLocked, isPaused, isVictory, problem.choices, roundResolved, submitAnswer, typedAnswer, useKeypad]);
 
   const activeHint = language === 'si' ? problem.hintSi : problem.hint;
 
@@ -268,9 +270,13 @@ export function MathStage({
           <button
             type="button"
             onClick={() => {
-              soundEngine.clearScheduled();
               soundEngine.playTapPop();
-              onBackToCategory();
+              if (isVictory) {
+                soundEngine.clearScheduled();
+                onBackToCategory();
+              } else {
+                setConfirmExitTarget('category');
+              }
             }}
             aria-label="Back to Math modes"
             style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
@@ -618,7 +624,7 @@ export function MathStage({
                 type="button"
                 onClick={() => {
                   soundEngine.playTapPop();
-                  onBackToHome();
+                  setConfirmExitTarget('home');
                 }}
                 style={{ boxShadow: '0 5px 0 0 #CBD5E1' }}
                 className="toy-btn w-full min-h-[48px] rounded-2xl bg-slate-100 text-slate-700 font-display text-lg font-bold flex items-center justify-center gap-2 cursor-pointer"
@@ -703,6 +709,23 @@ export function MathStage({
           </div>
         </div>
       )}
+
+      <ConfirmCloseDialog
+        open={confirmExitTarget !== null}
+        language={language}
+        message={t.common.confirmExitGameMessage}
+        onConfirm={() => {
+          const target = confirmExitTarget;
+          setConfirmExitTarget(null);
+          soundEngine.clearScheduled();
+          if (target === 'home') {
+            onBackToHome();
+          } else {
+            onBackToCategory();
+          }
+        }}
+        onCancel={() => setConfirmExitTarget(null)}
+      />
     </div>
   );
 }

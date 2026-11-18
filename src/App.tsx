@@ -51,7 +51,7 @@ export default function App() {
   const [activeEnglishMode, setActiveEnglishMode] = useState<EnglishMode>('DICTATION');
 
   const [level, setLevel] = useState<DifficultyLevel>('beginner');
-  const [instrument, setInstrument] = useState<InstrumentType>('marimba');
+  const [instrument, setInstrument] = useState<InstrumentType>('piano');
   const [muted, setMuted] = useState<boolean>(false);
   const [language, setLanguage] = useState<AppLanguage>(() => loadLanguage());
 
@@ -91,6 +91,16 @@ export default function App() {
       document.documentElement.lang = language === 'si' ? 'si' : 'en';
     }
   }, [language]);
+
+  // Ask confirmation before closing browser tab/window
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   // Active play time tracker (counts seconds while tab is visible & unlocked)
   useEffect(() => {

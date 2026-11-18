@@ -40,6 +40,7 @@ import { soundEngine } from '../audio/soundEngine';
 import { MascotStage } from './MascotStage';
 import { RainbowPiano } from './RainbowPiano';
 import { AppLanguage, TEXT } from '../i18n/translations';
+import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 
 interface GameStageProps {
   profile: PlayerProfile;
@@ -104,6 +105,7 @@ export function GameStage({
   const [streak, setStreak] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isVictory, setIsVictory] = useState<boolean>(false);
+  const [confirmExitTarget, setConfirmExitTarget] = useState<'menu' | 'home' | null>(null);
 
   const [owlMood, setOwlMood] = useState<MascotMood>('listening');
   const [owlMessage, setOwlMessage] = useState<string>(t.music.listenClosely);
@@ -667,7 +669,7 @@ export function GameStage({
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (externalLocked || e.repeat) return;
+      if (confirmExitTarget !== null || externalLocked || e.repeat) return;
       if (e.key === 'Escape') {
         if (!isVictory) {
           if (isPaused) {
@@ -736,6 +738,7 @@ export function GameStage({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [
+    confirmExitTarget,
     externalLocked,
     handleCheckExactChord,
     handleChordQualityClick,
@@ -757,9 +760,13 @@ export function GameStage({
           <button
             type="button"
             onClick={() => {
-              soundEngine.clearScheduled();
               soundEngine.playTapPop();
-              onExitToMenu();
+              if (isVictory) {
+                soundEngine.clearScheduled();
+                onExitToMenu();
+              } else {
+                setConfirmExitTarget('menu');
+              }
             }}
             aria-label="Back to mode menu"
             style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
@@ -1104,7 +1111,7 @@ export function GameStage({
                           type="button"
                           disabled={isPlayingPrompt || roundResolved}
                           onClick={() => {
-                            soundEngine.playTapPop();
+                            soundEngine.playNote(note.freq, instrumentRef.current, 0.72);
                             setSelectedChordRoot(note.id);
                           }}
                           style={{
@@ -1403,9 +1410,8 @@ export function GameStage({
               <button
                 type="button"
                 onClick={() => {
-                  soundEngine.clearScheduled();
                   soundEngine.playTapPop();
-                  onBackToHome();
+                  setConfirmExitTarget('home');
                 }}
                 style={{ boxShadow: '0 5px 0 0 #CBD5E1' }}
                 className="toy-btn w-full min-h-[48px] rounded-2xl bg-slate-100 text-slate-700 font-display text-lg font-bold flex items-center justify-center gap-2 cursor-pointer"
@@ -1510,6 +1516,23 @@ export function GameStage({
           </div>
         </div>
       )}
+
+      <ConfirmCloseDialog
+        open={confirmExitTarget !== null}
+        language={language}
+        message={t.common.confirmExitGameMessage}
+        onConfirm={() => {
+          const target = confirmExitTarget;
+          setConfirmExitTarget(null);
+          soundEngine.clearScheduled();
+          if (target === 'home') {
+            onBackToHome();
+          } else {
+            onExitToMenu();
+          }
+        }}
+        onCancel={() => setConfirmExitTarget(null)}
+      />
     </div>
   );
 }

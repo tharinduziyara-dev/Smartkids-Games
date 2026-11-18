@@ -434,6 +434,7 @@ export function TitleScreen({
               onOpenDictionary();
             }}
             aria-label={t.header.dictionary}
+            title={t.header.dictionary}
             style={{
               background: 'linear-gradient(180deg, #34D399 0%, #059669 100%)',
               boxShadow: '0 4px 0 0 #065F46',
@@ -441,7 +442,7 @@ export function TitleScreen({
             className="toy-btn min-h-[44px] px-3 rounded-2xl text-white font-display text-xs sm:text-sm font-bold flex items-center gap-1.5 border-2 border-white/60 cursor-pointer whitespace-nowrap"
           >
             <Languages className="w-4 h-4 shrink-0" />
-            <span className="hidden sm:inline">{t.header.dictionary}</span>
+            <span>{t.header.dictionary}</span>
           </button>
 
           {/* My Rewards Collection Button */}
@@ -475,7 +476,7 @@ export function TitleScreen({
                 onClick={() => {
                   soundEngine.playTapPop();
                   onSelectInstrument('marimba');
-                  soundEngine.playNote(329.63, 'marimba', 0.5);
+                  soundEngine.playChord([261.63, 329.63, 392.0], 'marimba', 0.9);
                 }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                   instrument === 'marimba'
@@ -490,7 +491,7 @@ export function TitleScreen({
                 onClick={() => {
                   soundEngine.playTapPop();
                   onSelectInstrument('piano');
-                  soundEngine.playNote(329.63, 'piano', 0.55);
+                  soundEngine.playChord([261.63, 329.63, 392.0, 523.25], 'piano', 1.25);
                 }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                   instrument === 'piano'

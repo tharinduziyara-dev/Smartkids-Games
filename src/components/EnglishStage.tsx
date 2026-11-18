@@ -30,6 +30,7 @@ import { soundEngine } from '../audio/soundEngine';
 import { speakWord, stopSpeaking } from '../utils/speech';
 import { MascotStage } from './MascotStage';
 import { AppLanguage, TEXT } from '../i18n/translations';
+import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 
 interface EnglishStageProps {
   profile: PlayerProfile;
@@ -77,6 +78,7 @@ export function EnglishStage({
   const [streak, setStreak] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isVictory, setIsVictory] = useState(false);
+  const [confirmExitTarget, setConfirmExitTarget] = useState<'category' | 'home' | null>(null);
 
   const [target, setTarget] = useState<EnglishWordItem>(() =>
     pickEnglishRound(level, undefined, 4).target
@@ -287,10 +289,14 @@ export function EnglishStage({
           <button
             type="button"
             onClick={() => {
-              soundEngine.clearScheduled();
-              stopSpeaking();
               soundEngine.playTapPop();
-              onBackToCategory();
+              if (isVictory) {
+                soundEngine.clearScheduled();
+                stopSpeaking();
+                onBackToCategory();
+              } else {
+                setConfirmExitTarget('category');
+              }
             }}
             aria-label="Back to English modes"
             style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
@@ -717,9 +723,8 @@ export function EnglishStage({
               <button
                 type="button"
                 onClick={() => {
-                  stopSpeaking();
                   soundEngine.playTapPop();
-                  onBackToHome();
+                  setConfirmExitTarget('home');
                 }}
                 style={{ boxShadow: '0 5px 0 0 #CBD5E1' }}
                 className="toy-btn w-full min-h-[48px] rounded-2xl bg-slate-100 text-slate-700 font-display text-lg font-bold flex items-center justify-center gap-2 cursor-pointer"
@@ -805,6 +810,24 @@ export function EnglishStage({
           </div>
         </div>
       )}
+
+      <ConfirmCloseDialog
+        open={confirmExitTarget !== null}
+        language={language}
+        message={t.common.confirmExitGameMessage}
+        onConfirm={() => {
+          const target = confirmExitTarget;
+          setConfirmExitTarget(null);
+          soundEngine.clearScheduled();
+          stopSpeaking();
+          if (target === 'home') {
+            onBackToHome();
+          } else {
+            onBackToCategory();
+          }
+        }}
+        onCancel={() => setConfirmExitTarget(null)}
+      />
     </div>
   );
 }

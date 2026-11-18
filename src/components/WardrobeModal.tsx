@@ -9,6 +9,7 @@ import {
 import { MusicalFairy } from './MusicalFairy';
 import { soundEngine } from '../audio/soundEngine';
 import { AppLanguage, TEXT } from '../i18n/translations';
+import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 
 interface WardrobeModalProps {
   profile: PlayerProfile;
@@ -26,6 +27,7 @@ export function WardrobeModal({
   onClose,
 }: WardrobeModalProps) {
   const [activeCat, setActiveCat] = useState<WardrobeCategory>('dress');
+  const [confirmClose, setConfirmClose] = useState(false);
 
   const items = WARDROBE_CATALOG.filter((item) => item.category === activeCat);
   const unlockedSet = new Set(profile.unlockedItems);
@@ -65,7 +67,7 @@ export function WardrobeModal({
             type="button"
             onClick={() => {
               soundEngine.playTapPop();
-              onClose();
+              setConfirmClose(true);
             }}
             aria-label="Close wardrobe"
             style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
@@ -201,6 +203,16 @@ export function WardrobeModal({
           </button>
         </div>
       </div>
+
+      <ConfirmCloseDialog
+        open={confirmClose}
+        language={language}
+        onConfirm={() => {
+          setConfirmClose(false);
+          onClose();
+        }}
+        onCancel={() => setConfirmClose(false)}
+      />
     </div>
   );
 }

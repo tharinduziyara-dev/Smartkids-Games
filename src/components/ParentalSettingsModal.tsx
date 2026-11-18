@@ -5,6 +5,7 @@ import { ParentGateForm } from './ParentGateForm';
 import { VALID_TIME_LIMITS, formatRemainingTime } from '../utils/parentalStorage';
 import { soundEngine } from '../audio/soundEngine';
 import { AppLanguage, TEXT } from '../i18n/translations';
+import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 
 interface ParentalSettingsModalProps {
   settings: ParentalSettings;
@@ -27,6 +28,7 @@ export function ParentalSettingsModal({
   const [newPin, setNewPin] = useState(settings.pin);
   const [pinSavedNotice, setPinSavedNotice] = useState<string | null>(null);
   const [pinError, setPinError] = useState<string | null>(null);
+  const [confirmClose, setConfirmClose] = useState(false);
 
   const t = TEXT[language].parental;
 
@@ -77,7 +79,7 @@ export function ParentalSettingsModal({
             type="button"
             onClick={() => {
               soundEngine.playTapPop();
-              onClose();
+              setConfirmClose(true);
             }}
             aria-label="Close parent settings"
             style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
@@ -239,6 +241,16 @@ export function ParentalSettingsModal({
           </div>
         )}
       </div>
+
+      <ConfirmCloseDialog
+        open={confirmClose}
+        language={language}
+        onConfirm={() => {
+          setConfirmClose(false);
+          onClose();
+        }}
+        onCancel={() => setConfirmClose(false)}
+      />
     </div>
   );
 }
