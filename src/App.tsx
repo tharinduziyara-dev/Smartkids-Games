@@ -33,6 +33,7 @@ import { TitleScreen } from './components/TitleScreen';
 import { GameStage } from './components/GameStage';
 import { MathStage } from './components/MathStage';
 import { EnglishStage } from './components/EnglishStage';
+import { FairyFlightStage } from './components/FairyFlightStage';
 import { ConfettiCanvas } from './components/ConfettiCanvas';
 import { WardrobeModal } from './components/WardrobeModal';
 import { ProfileModal } from './components/ProfileModal';
@@ -49,6 +50,7 @@ export default function App() {
   const [activeMusicMode, setActiveMusicMode] = useState<GameMode>('GUESS_NOTE');
   const [activeMathMode, setActiveMathMode] = useState<MathMode>('ADDITION');
   const [activeEnglishMode, setActiveEnglishMode] = useState<EnglishMode>('DICTATION');
+  const [isSkyRun, setIsSkyRun] = useState<boolean>(false);
 
   const [level, setLevel] = useState<DifficultyLevel>('beginner');
   const [instrument, setInstrument] = useState<InstrumentType>('piano');
@@ -184,20 +186,48 @@ export default function App() {
   const handleStartMusicMode = useCallback((mode: GameMode) => {
     setSelectedCategory('music');
     setActiveMusicMode(mode);
+    setIsSkyRun(false);
     setGameState('PLAYING');
   }, []);
 
   const handleStartMathMode = useCallback((mode: MathMode) => {
     setSelectedCategory('math');
     setActiveMathMode(mode);
+    setIsSkyRun(false);
     setGameState('PLAYING');
   }, []);
 
   const handleStartEnglishMode = useCallback((mode: EnglishMode) => {
     setSelectedCategory('english');
     setActiveEnglishMode(mode);
+    setIsSkyRun(false);
     setGameState('PLAYING');
   }, []);
+
+  const handleConsumeFlightTurn = useCallback(() => {
+    setStore((prev) => ({
+      ...prev,
+      profiles: prev.profiles.map((p) =>
+        p.id === activeProfile.id
+          ? {
+              ...p,
+              flightTurns: Math.max(0, p.flightTurns - 1),
+            }
+          : p
+      ),
+    }));
+  }, [activeProfile.id]);
+
+  const handleStartSkyRun = useCallback(
+    (category: AppCategory) => {
+      if (activeProfile.flightTurns <= 0) return;
+      handleConsumeFlightTurn();
+      setSelectedCategory(category);
+      setIsSkyRun(true);
+      setGameState('PLAYING');
+    },
+    [activeProfile.flightTurns, handleConsumeFlightTurn]
+  );
 
   const handleRecordProgress = useCallback(
     (opts: {
@@ -205,7 +235,12 @@ export default function App() {
       completedCategory?: AppCategory;
       level?: DifficultyLevel;
       streak?: number;
-    }): { newWardrobe: WardrobeItem[]; newRewards: RewardItem[] } => {
+      skipFlightProgress?: boolean;
+    }): {
+      newWardrobe: WardrobeItem[];
+      newRewards: RewardItem[];
+      earnedFlightTurn: boolean;
+    } => {
       const newTotal = activeProfile.totalStars + opts.starsEarned;
       const newWardrobe = findNewlyUnlockedItems(
         activeProfile.unlockedItems,
@@ -230,6 +265,13 @@ export default function App() {
         nextRewardIds
       );
 
+      const nextProgressRaw = opts.skipFlightProgress
+        ? activeProfile.flightTurnProgress
+        : activeProfile.flightTurnProgress + 1;
+      const earnedFlightTurn = !opts.skipFlightProgress && nextProgressRaw >= 5;
+      const nextProgress = earnedFlightTurn ? 0 : nextProgressRaw;
+      const nextTurns = activeProfile.flightTurns + (earnedFlightTurn ? 1 : 0);
+
       setStore((prev) => ({
         ...prev,
         profiles: prev.profiles.map((p) =>
@@ -239,14 +281,18 @@ export default function App() {
                 totalStars: p.totalStars + opts.starsEarned,
                 unlockedItems: nextWardrobeIds,
                 unlockedRewards: nextRewardIds,
+                flightTurnProgress: nextProgress,
+                flightTurns: nextTurns,
               }
             : p
         ),
       }));
 
-      return { newWardrobe, newRewards };
+      return { newWardrobe, newRewards, earnedFlightTurn };
     },
     [
+      activeProfile.flightTurnProgress,
+      activeProfile.flightTurns,
       activeProfile.id,
       activeProfile.totalStars,
       activeProfile.unlockedItems,
@@ -329,12 +375,14 @@ export default function App() {
   const handleBackToCategory = useCallback(() => {
     soundEngine.clearScheduled();
     stopSpeaking();
+    setIsSkyRun(false);
     setGameState('TITLE_MENU');
   }, []);
 
   const handleBackToHome = useCallback(() => {
     soundEngine.clearScheduled();
     stopSpeaking();
+    setIsSkyRun(false);
     setSelectedCategory(null);
     setGameState('TITLE_MENU');
   }, []);
@@ -374,6 +422,22 @@ export default function App() {
             onStartMusicMode={handleStartMusicMode}
             onStartMathMode={handleStartMathMode}
             onStartEnglishMode={handleStartEnglishMode}
+            onStartSkyRun={handleStartSkyRun}
+          />
+        ) : isSkyRun && selectedCategory ? (
+          <FairyFlightStage
+            profile={activeProfile}
+            category={selectedCategory}
+            level={level}
+            instrument={instrument}
+            muted={muted}
+            language={language}
+            externalLocked={parental.isLocked}
+            onToggleMute={handleToggleMute}
+            onConsumeFlightTurn={handleConsumeFlightTurn}
+            onRecordProgress={handleRecordProgress}
+            onTriggerConfetti={handleTriggerConfetti}
+            onExit={handleBackToCategory}
           />
         ) : selectedCategory === 'math' ? (
           <MathStage
@@ -388,6 +452,7 @@ export default function App() {
             onToggleMute={handleToggleMute}
             onRecordProgress={handleRecordProgress}
             onTriggerConfetti={handleTriggerConfetti}
+            onLaunchSkyRun={() => handleStartSkyRun('math')}
             onBackToCategory={handleBackToCategory}
             onBackToHome={handleBackToHome}
             externalLocked={parental.isLocked}
@@ -405,6 +470,7 @@ export default function App() {
             onToggleMute={handleToggleMute}
             onRecordProgress={handleRecordProgress}
             onTriggerConfetti={handleTriggerConfetti}
+            onLaunchSkyRun={() => handleStartSkyRun('english')}
             onBackToCategory={handleBackToCategory}
             onBackToHome={handleBackToHome}
             externalLocked={parental.isLocked}
@@ -424,6 +490,7 @@ export default function App() {
             onToggleMute={handleToggleMute}
             onRecordProgress={handleRecordProgress}
             onTriggerConfetti={handleTriggerConfetti}
+            onLaunchSkyRun={() => handleStartSkyRun('music')}
             onExitToMenu={handleBackToCategory}
             onBackToHome={handleBackToHome}
             externalLocked={parental.isLocked}

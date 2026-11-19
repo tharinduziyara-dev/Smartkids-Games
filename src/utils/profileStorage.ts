@@ -102,6 +102,8 @@ export function createPlayerProfile(
     unlockedItems: getUnlockedIdsForStars(initialStars),
     unlockedRewards: getUnlockedRewardIds(initialStars),
     equippedWardrobe: { ...DEFAULT_EQUIPPED_WARDROBE },
+    flightTurns: 0,
+    flightTurnProgress: 0,
     createdAt: Date.now(),
   };
 }
@@ -114,6 +116,12 @@ export function loadProfilesStore(): ProfilesStore {
       if (Array.isArray(parsed.profiles) && parsed.profiles.length > 0) {
         const sanitized = parsed.profiles.map((p) => {
           const safeStars = Number.isFinite(p.totalStars) ? Math.max(0, p.totalStars!) : 0;
+          const safeTurns = Number.isFinite(p.flightTurns)
+            ? Math.max(0, Math.floor(p.flightTurns!))
+            : 0;
+          const safeProgress = Number.isFinite(p.flightTurnProgress)
+            ? Math.min(4, Math.max(0, Math.floor(p.flightTurnProgress!)))
+            : 0;
           return {
             ...p,
             id: String(p.id),
@@ -138,6 +146,8 @@ export function loadProfilesStore(): ProfilesStore {
               ...DEFAULT_EQUIPPED_WARDROBE,
               ...(p.equippedWardrobe ?? {}),
             },
+            flightTurns: safeTurns,
+            flightTurnProgress: safeProgress,
             createdAt: p.createdAt || Date.now(),
           };
         });

@@ -31,6 +31,10 @@ import { speakWord, stopSpeaking } from '../utils/speech';
 import { MascotStage } from './MascotStage';
 import { AppLanguage, TEXT } from '../i18n/translations';
 import { ConfirmCloseDialog } from './ConfirmCloseDialog';
+import {
+  FlightTurnProgressStrip,
+  FlightTurnRewardModal,
+} from './FlightTurnWidgets';
 
 interface EnglishStageProps {
   profile: PlayerProfile;
@@ -47,8 +51,13 @@ interface EnglishStageProps {
     completedCategory?: AppCategory;
     level?: DifficultyLevel;
     streak?: number;
-  }) => { newWardrobe: WardrobeItem[]; newRewards: RewardItem[] };
+  }) => {
+    newWardrobe: WardrobeItem[];
+    newRewards: RewardItem[];
+    earnedFlightTurn: boolean;
+  };
   onTriggerConfetti: (intensity: 'small' | 'big') => void;
+  onLaunchSkyRun: () => void;
   onBackToCategory: () => void;
   onBackToHome: () => void;
   externalLocked?: boolean;
@@ -68,6 +77,7 @@ export function EnglishStage({
   onToggleMute,
   onRecordProgress,
   onTriggerConfetti,
+  onLaunchSkyRun,
   onBackToCategory,
   onBackToHome,
   externalLocked = false,
@@ -79,6 +89,8 @@ export function EnglishStage({
   const [isPaused, setIsPaused] = useState(false);
   const [isVictory, setIsVictory] = useState(false);
   const [confirmExitTarget, setConfirmExitTarget] = useState<'category' | 'home' | null>(null);
+  const [showFlightReward, setShowFlightReward] = useState(false);
+  const [pendingFinalVictory, setPendingFinalVictory] = useState(false);
 
   const [target, setTarget] = useState<EnglishWordItem>(() =>
     pickEnglishRound(level, undefined, 4).target
@@ -151,6 +163,8 @@ export function EnglishStage({
     setStreak(0);
     setIsPaused(false);
     setIsVictory(false);
+    setShowFlightReward(false);
+    setPendingFinalVictory(false);
     loadRound();
     return () => {
       soundEngine.clearScheduled();
@@ -178,7 +192,7 @@ export function EnglishStage({
       setMascotMessage(msg);
 
       const isFinal = round >= TOTAL_ROUNDS;
-      const { newWardrobe, newRewards } = onRecordProgress({
+      const { newWardrobe, newRewards, earnedFlightTurn } = onRecordProgress({
         starsEarned: 1,
         completedCategory: isFinal ? 'english' : undefined,
         level,
@@ -197,9 +211,9 @@ export function EnglishStage({
         setUnlockNotice(`${t.common.unlockedPrefix} ${rewardNames[0]}`);
       }
 
-      onTriggerConfetti(isFinal ? 'big' : 'small');
+      onTriggerConfetti(isFinal || earnedFlightTurn ? 'big' : 'small');
       soundEngine.schedule(() => {
-        if (rewardNames.length > 0) {
+        if (rewardNames.length > 0 || earnedFlightTurn) {
           soundEngine.playUnlockFanfare();
         } else if (isFinal) {
           soundEngine.playVictoryFanfare();
@@ -209,7 +223,10 @@ export function EnglishStage({
       }, 120);
 
       soundEngine.schedule(() => {
-        if (isFinal) {
+        if (earnedFlightTurn) {
+          setPendingFinalVictory(isFinal);
+          setShowFlightReward(true);
+        } else if (isFinal) {
           setMascotMood('celebrating');
           setIsVictory(true);
         } else {
@@ -217,7 +234,7 @@ export function EnglishStage({
           setRound(nextR);
           loadRound(target.word);
         }
-      }, rewardNames.length > 0 ? 1850 : 1500);
+      }, earnedFlightTurn ? 950 : rewardNames.length > 0 ? 1850 : 1500);
     },
     [
       level,
@@ -244,7 +261,7 @@ export function EnglishStage({
 
   const handleTypedSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (roundResolved || isPaused || isVictory) return;
+    if (roundResolved || isPaused || isVictory || showFlightReward) return;
     const cleaned = typedWord.trim().toLowerCase();
     if (!cleaned) return;
 
@@ -256,7 +273,7 @@ export function EnglishStage({
   };
 
   const handleMatchChoice = (item: EnglishWordItem) => {
-    if (roundResolved || isPaused || isVictory) return;
+    if (roundResolved || isPaused || isVictory || showFlightReward) return;
     soundEngine.playTapPop();
 
     if (item.word === target.word) {
@@ -270,11 +287,26 @@ export function EnglishStage({
     soundEngine.playTapPop();
     setIsVictory(false);
     setIsPaused(false);
+    setShowFlightReward(false);
+    setPendingFinalVictory(false);
     setRound(1);
     setSetStars(0);
     setStreak(0);
     loadRound();
   }, [loadRound]);
+
+  const handleContinueAfterFlightReward = useCallback(() => {
+    setShowFlightReward(false);
+    if (pendingFinalVictory) {
+      setPendingFinalVictory(false);
+      setMascotMood('celebrating');
+      setIsVictory(true);
+    } else {
+      const nextR = round + 1;
+      setRound(nextR);
+      loadRound(target.word);
+    }
+  }, [loadRound, pendingFinalVictory, round, target.word]);
 
   const dashedMask = target.word
     .split('')
@@ -378,26 +410,33 @@ export function EnglishStage({
         </div>
       </header>
 
-      {/* Round Progress Stars Strip */}
-      <div className="flex items-center justify-center gap-2 my-2">
-        {Array.from({ length: TOTAL_ROUNDS }).map((_, i) => {
-          const filled = i < setStars;
-          const isCurrent = i === round - 1 && !filled;
-          return (
-            <div
-              key={i}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-transform ${
-                filled
-                  ? 'bg-amber-400 text-white shadow-[0_3px_0_0_#D97706] scale-105'
-                  : isCurrent
-                  ? 'bg-white border-2 border-indigo-400 text-indigo-400 shadow-sm'
-                  : 'bg-white/70 border border-slate-200 text-slate-300'
-              }`}
-            >
-              <Star className={`w-4 h-4 sm:w-5 sm:h-5 ${filled ? 'fill-white' : ''}`} />
-            </div>
-          );
-        })}
+      {/* Round Progress Stars Strip + 3D Flight Turn Counter */}
+      <div className="flex flex-col items-center gap-1.5 my-2">
+        <div className="flex items-center justify-center gap-2">
+          {Array.from({ length: TOTAL_ROUNDS }).map((_, i) => {
+            const filled = i < setStars;
+            const isCurrent = i === round - 1 && !filled;
+            return (
+              <div
+                key={i}
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-transform ${
+                  filled
+                    ? 'bg-amber-400 text-white shadow-[0_3px_0_0_#D97706] scale-105'
+                    : isCurrent
+                    ? 'bg-white border-2 border-indigo-400 text-indigo-400 shadow-sm'
+                    : 'bg-white/70 border border-slate-200 text-slate-300'
+                }`}
+              >
+                <Star className={`w-4 h-4 sm:w-5 sm:h-5 ${filled ? 'fill-white' : ''}`} />
+              </div>
+            );
+          })}
+        </div>
+        <FlightTurnProgressStrip
+          progress={showFlightReward ? 5 : profile.flightTurnProgress}
+          turnsAvailable={profile.flightTurns}
+          language={language}
+        />
       </div>
 
       {/* Main Play Area */}
@@ -810,6 +849,21 @@ export function EnglishStage({
           </div>
         </div>
       )}
+
+      <FlightTurnRewardModal
+        open={showFlightReward && !externalLocked}
+        equippedWardrobe={profile.equippedWardrobe}
+        turnsAvailable={profile.flightTurns}
+        language={language}
+        onPlaySkyRun={() => {
+          soundEngine.clearScheduled();
+          stopSpeaking();
+          setShowFlightReward(false);
+          setPendingFinalVictory(false);
+          onLaunchSkyRun();
+        }}
+        onContinue={handleContinueAfterFlightReward}
+      />
 
       <ConfirmCloseDialog
         open={confirmExitTarget !== null}

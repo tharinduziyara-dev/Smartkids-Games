@@ -387,6 +387,8 @@ export interface PlayerProfile {
   unlockedItems: string[];
   unlockedRewards: string[];
   equippedWardrobe: EquippedWardrobe;
+  flightTurns: number;
+  flightTurnProgress: number;
   createdAt: number;
 }
 

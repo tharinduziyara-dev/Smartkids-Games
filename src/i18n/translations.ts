@@ -264,6 +264,47 @@ export const TEXT: Record<
       errEnterNumber: string;
       errWrongMath: string;
     };
+    skyRun: {
+      cardTitle: string;
+      cardSubtitle: string;
+      cardCta: string;
+      modeTag: string;
+      swipeHint: string;
+      pauseTitle: string;
+      resumeFlight: string;
+      exitFlight: string;
+      obstacleBlocked: string;
+      mathTitle: string;
+      mathPrompt: string;
+      englishTitle: string;
+      englishPrompt: string;
+      hearWord: string;
+      musicNoteTitle: string;
+      musicChordTitle: string;
+      musicPrompt: string;
+      listenAgain: string;
+      magicBlastMsg: string;
+      wrongOopsMsg: string;
+      gameOverTitle: string;
+      gameOverSubtitle: string;
+      starsCollectedLabel: string;
+      obstaclesClearedLabel: string;
+      playAgainBtn: string;
+      backToCategoryBtn: string;
+      webglFallback: string;
+      turnProgressLabel: string;
+      earnedTurnsLabel: (count: number) => string;
+      nextTurnProgress: (prog: number) => string;
+      needTurnsCta: (prog: number) => string;
+      playWithTurnCta: (turns: number) => string;
+      useOneTurnHint: string;
+      rewardPopupTitle: string;
+      rewardPopupSubtitle: string;
+      rewardPopupPlayBtn: string;
+      rewardPopupContinueBtn: string;
+      flyAgainWithTurnBtn: (turns: number) => string;
+      noTurnsLeftMsg: string;
+    };
   }
 > = {
   en: {
@@ -745,6 +786,50 @@ export const TEXT: Record<
       errEnterNumber: 'Please enter the number answer.',
       errWrongMath: 'That answer did not match. Try solving the new problem.',
     },
+    skyRun: {
+      cardTitle: 'Fairy Sky Flight (3D)',
+      cardSubtitle:
+        'Fly through clouds, grab stars, and blast obstacles with magic answers!',
+      cardCta: 'Fly in 3D Sky',
+      modeTag: '3D Endless Flight',
+      swipeHint: 'Swipe or drag (or use Arrow keys) to fly left, right, up & down',
+      pauseTitle: 'Flight Paused',
+      resumeFlight: 'Resume Flight',
+      exitFlight: 'Exit Flight',
+      obstacleBlocked: 'Obstacle Ahead! Answer to cast magic!',
+      mathTitle: 'Magic Math Blast',
+      mathPrompt: 'Solve the equation to blast the obstacle:',
+      englishTitle: 'Magic Spelling Shield',
+      englishPrompt: 'Pick the correct English spelling for this picture:',
+      hearWord: 'Hear Word',
+      musicNoteTitle: 'Magic Note Blast',
+      musicChordTitle: 'Magic Chord Blast',
+      musicPrompt: 'Listen closely and pick the matching sound:',
+      listenAgain: 'Listen Again',
+      magicBlastMsg: 'Sparkle Blast! Keep flying!',
+      wrongOopsMsg: 'Oops! Watch out ahead!',
+      gameOverTitle: 'Flight Complete!',
+      gameOverSubtitle: 'Great flying through the sky!',
+      starsCollectedLabel: 'Stars Earned',
+      obstaclesClearedLabel: 'Obstacles Blasted',
+      playAgainBtn: 'Fly Again',
+      backToCategoryBtn: 'Back to Games',
+      webglFallback: '3D Sky Flight needs WebGL graphics enabled on your device.',
+      turnProgressLabel: '3D Flight Turn',
+      earnedTurnsLabel: (count) => `${count} ${count === 1 ? 'Turn' : 'Turns'} Ready`,
+      nextTurnProgress: (prog) => `Next turn: ${prog}/5`,
+      needTurnsCta: (prog) => `Earn 5 Correct Answers (${prog}/5)`,
+      playWithTurnCta: (turns) => `Play Fairy Sky Flight (3D) · ${turns}`,
+      useOneTurnHint: 'Every 5 correct answers earns 1 free 3D flight turn',
+      rewardPopupTitle: '3D Flight Turn Earned!',
+      rewardPopupSubtitle:
+        'Awesome job! You got 5 correct answers and unlocked a free turn of Fairy Sky Flight (3D)!',
+      rewardPopupPlayBtn: 'Play Fairy Sky Flight (3D)',
+      rewardPopupContinueBtn: 'Keep Playing',
+      flyAgainWithTurnBtn: (turns) => `Fly Again (${turns} Left)`,
+      noTurnsLeftMsg:
+        'No 3D flight turns left! Give 5 correct answers in Music, Math, or English to earn another turn.',
+    },
   },
   si: {
     appName: 'SmartKids',
@@ -1225,6 +1310,50 @@ export const TEXT: Record<
       errWrongPin: 'PIN අංකය වැරදියි. නැවත බලන්න හෝ වැඩිහිටි ගණිතය භාවිතා කරන්න.',
       errEnterNumber: 'කරුණාකර සංඛ්‍යාත්මක පිළිතුර ඇතුළත් කරන්න.',
       errWrongMath: 'එම පිළිතුර නොගැලපේ. අලුත් ගැටලුව විසඳා බලන්න.',
+    },
+    skyRun: {
+      cardTitle: 'සුරංගනා අහස් පියාසැරිය (3D)',
+      cardSubtitle:
+        'වලාකුළු අතරින් පියාසර කර තරු එකතු කර මැජික් පිළිතුරු වලින් බාධක බිඳින්න!',
+      cardCta: '3D අහසේ පියාසර කරන්න',
+      modeTag: '3D පියාසැරි ක්‍රීඩාව',
+      swipeHint: 'වමට, දකුණට, උඩට හා පහළට පියාසර කිරීමට Swipe හෝ ඊතල යතුරු ඔබන්න',
+      pauseTitle: 'පියාසැරිය නවතා ඇත',
+      resumeFlight: 'පියාසැරිය දිගටම කරන්න',
+      exitFlight: 'පිටවන්න',
+      obstacleBlocked: 'ඉදිරියේ බාධකයක්! මැජික් දමන්න පිළිතුරු දෙන්න!',
+      mathTitle: 'මැජික් ගණිත ප්‍රහාරය',
+      mathPrompt: 'බාධකය විනාශ කිරීමට ගණිත ගැටලුව විසඳන්න:',
+      englishTitle: 'මැජික් ඉංග්‍රීසි අක්ෂර',
+      englishPrompt: 'පින්තූරයට ගැලපෙන නිවැරදි ඉංග්‍රීසි අක්ෂර තෝරන්න:',
+      hearWord: 'වචනය අසන්න',
+      musicNoteTitle: 'මැජික් ස්වර ප්‍රහාරය',
+      musicChordTitle: 'මැජික් කෝඩ් ප්‍රහාරය',
+      musicPrompt: 'හඬ හොඳින් අසා ගැලපෙන පිළිතුර තෝරන්න:',
+      listenAgain: 'නැවත අසන්න',
+      magicBlastMsg: 'සුපිරි මැජික්! ඉදිරියට පියාසර කරන්න!',
+      wrongOopsMsg: 'අයියෝ! හදවතක් අඩු වුණා!',
+      gameOverTitle: 'පියාසැරිය අවසන්!',
+      gameOverSubtitle: 'අහසේ හරිම ලස්සනට පියාසර කළා!',
+      starsCollectedLabel: 'දිනූ තරු ගණන',
+      obstaclesClearedLabel: 'බිඳ දැමූ බාධක',
+      playAgainBtn: 'නැවත පියාසර කරන්න',
+      backToCategoryBtn: 'ක්‍රීඩා වෙත යන්න',
+      webglFallback: '3D අහස් පියාසැරිය සඳහා WebGL ග්‍රැෆික්ස් අවශ්‍ය වේ.',
+      turnProgressLabel: '3D පියාසැරි වාරය',
+      earnedTurnsLabel: (count) => `සූදානම් වාර: ${count}`,
+      nextTurnProgress: (prog) => `ඊළඟ වාරය: ${prog}/5`,
+      needTurnsCta: (prog) => `නිවැරදි පිළිතුරු 5ක් දෙන්න (${prog}/5)`,
+      playWithTurnCta: (turns) => `Fairy Sky Flight (3D) ක්‍රීඩා කරන්න · ${turns}`,
+      useOneTurnHint: 'නිවැරදි පිළිතුරු 5කට වරක් නොමිලේ 3D පියාසැරි වාරයක් ලැබේ',
+      rewardPopupTitle: '3D පියාසැරි වාරයක් දිනාගත්තා!',
+      rewardPopupSubtitle:
+        'නියමයි! ඔබ නිවැරදි පිළිතුරු 5ක් ලබා දී Fairy Sky Flight (3D) නොමිලේ වාරයක් දිනා ගත්තා!',
+      rewardPopupPlayBtn: 'Play Fairy Sky Flight (3D)',
+      rewardPopupContinueBtn: 'දිගටම සෙල්ලම් කරන්න',
+      flyAgainWithTurnBtn: (turns) => `නැවත පියාසර කරන්න (${turns}ක් ඉතිරියි)`,
+      noTurnsLeftMsg:
+        'තව 3D පියාසැරි වාර නැත! අලුත් වාරයක් දිනා ගැනීමට සංගීතය, ගණිතය හෝ ඉංග්‍රීසි ප්‍රශ්න 5කට නිවැරදිව පිළිතුරු දෙන්න.',
     },
   },
 };

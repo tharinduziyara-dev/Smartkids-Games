@@ -41,6 +41,10 @@ import { MascotStage } from './MascotStage';
 import { RainbowPiano } from './RainbowPiano';
 import { AppLanguage, TEXT } from '../i18n/translations';
 import { ConfirmCloseDialog } from './ConfirmCloseDialog';
+import {
+  FlightTurnProgressStrip,
+  FlightTurnRewardModal,
+} from './FlightTurnWidgets';
 
 interface GameStageProps {
   profile: PlayerProfile;
@@ -59,8 +63,13 @@ interface GameStageProps {
     completedCategory?: AppCategory;
     level?: DifficultyLevel;
     streak?: number;
-  }) => { newWardrobe: WardrobeItem[]; newRewards: RewardItem[] };
+  }) => {
+    newWardrobe: WardrobeItem[];
+    newRewards: RewardItem[];
+    earnedFlightTurn: boolean;
+  };
   onTriggerConfetti: (intensity: 'small' | 'big') => void;
+  onLaunchSkyRun: () => void;
   onExitToMenu: () => void;
   onBackToHome: () => void;
   externalLocked?: boolean;
@@ -92,6 +101,7 @@ export function GameStage({
   onToggleMute,
   onRecordProgress,
   onTriggerConfetti,
+  onLaunchSkyRun,
   onExitToMenu,
   onBackToHome,
   externalLocked = false,
@@ -106,6 +116,12 @@ export function GameStage({
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isVictory, setIsVictory] = useState<boolean>(false);
   const [confirmExitTarget, setConfirmExitTarget] = useState<'menu' | 'home' | null>(null);
+  const [showFlightReward, setShowFlightReward] = useState<boolean>(false);
+  const [pendingFinalVictory, setPendingFinalVictory] = useState<boolean>(false);
+  const pendingNextRoundRef = useRef<{
+    nextPrevTarget?: NoteId;
+    nextPrevChord?: TargetChord;
+  }>({});
 
   const [owlMood, setOwlMood] = useState<MascotMood>('listening');
   const [owlMessage, setOwlMessage] = useState<string>(t.music.listenClosely);
@@ -345,6 +361,9 @@ export function GameStage({
     setStreak(0);
     setIsVictory(false);
     setIsPaused(false);
+    setShowFlightReward(false);
+    setPendingFinalVictory(false);
+    pendingNextRoundRef.current = {};
     setupRound(1);
 
     return () => {
@@ -362,7 +381,7 @@ export function GameStage({
       setSetStars((s) => s + 1);
 
       const isFinalRound = round >= TOTAL_ROUNDS;
-      const { newWardrobe, newRewards } = onRecordProgress({
+      const { newWardrobe, newRewards, earnedFlightTurn } = onRecordProgress({
         starsEarned: 1,
         completedCategory: isFinalRound ? 'music' : undefined,
         level,
@@ -383,10 +402,10 @@ export function GameStage({
         setRecentUnlockText(`${tRef.current.common.unlockedPrefix} ${unlockLabels[0]}`);
       }
 
-      onTriggerConfetti(isFinalRound ? 'big' : 'small');
+      onTriggerConfetti(isFinalRound || earnedFlightTurn ? 'big' : 'small');
 
       soundEngine.schedule(() => {
-        if (unlockLabels.length > 0) {
+        if (unlockLabels.length > 0 || earnedFlightTurn) {
           soundEngine.playUnlockFanfare();
         } else if (isFinalRound) {
           soundEngine.playVictoryFanfare();
@@ -396,7 +415,11 @@ export function GameStage({
       }, 180);
 
       soundEngine.schedule(() => {
-        if (isFinalRound) {
+        if (earnedFlightTurn) {
+          pendingNextRoundRef.current = { nextPrevTarget, nextPrevChord };
+          setPendingFinalVictory(isFinalRound);
+          setShowFlightReward(true);
+        } else if (isFinalRound) {
           setOwlMood('celebrating');
           setIsVictory(true);
         } else {
@@ -404,7 +427,7 @@ export function GameStage({
           setRound(nextR);
           setupRound(nextR, nextPrevTarget, nextPrevChord);
         }
-      }, unlockLabels.length > 0 ? 1850 : isFinalRound ? 1550 : 1500);
+      }, earnedFlightTurn ? 950 : unlockLabels.length > 0 ? 1850 : isFinalRound ? 1550 : 1500);
     },
     [level, onRecordProgress, onTriggerConfetti, profile.mascot, round, setupRound, streak]
   );
@@ -641,11 +664,30 @@ export function GameStage({
     soundEngine.playTapPop();
     setIsVictory(false);
     setIsPaused(false);
+    setShowFlightReward(false);
+    setPendingFinalVictory(false);
+    pendingNextRoundRef.current = {};
     setRound(1);
     setSetStars(0);
     setStreak(0);
     setupRound(1);
   }, [setupRound]);
+
+  const handleContinueAfterFlightReward = useCallback(() => {
+    setShowFlightReward(false);
+    if (pendingFinalVictory) {
+      setPendingFinalVictory(false);
+      pendingNextRoundRef.current = {};
+      setOwlMood('celebrating');
+      setIsVictory(true);
+    } else {
+      const { nextPrevTarget, nextPrevChord } = pendingNextRoundRef.current;
+      pendingNextRoundRef.current = {};
+      const nextR = round + 1;
+      setRound(nextR);
+      setupRound(nextR, nextPrevTarget, nextPrevChord);
+    }
+  }, [pendingFinalVictory, round, setupRound]);
 
   const openPause = useCallback(() => {
     soundEngine.clearScheduled();
@@ -669,7 +711,7 @@ export function GameStage({
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (confirmExitTarget !== null || externalLocked || e.repeat) return;
+      if (confirmExitTarget !== null || externalLocked || showFlightReward || e.repeat) return;
       if (e.key === 'Escape') {
         if (!isVictory) {
           if (isPaused) {
@@ -750,6 +792,7 @@ export function GameStage({
     level,
     mode,
     openPause,
+    showFlightReward,
   ]);
 
   return (
@@ -902,26 +945,33 @@ export function GameStage({
         </div>
       </header>
 
-      {/* Round Progress Stars Strip */}
-      <div className="flex items-center justify-center gap-2 my-2">
-        {Array.from({ length: TOTAL_ROUNDS }).map((_, i) => {
-          const filled = i < setStars;
-          const isCurrent = i === round - 1 && !filled;
-          return (
-            <div
-              key={i}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-transform ${
-                filled
-                  ? 'bg-amber-400 text-white shadow-[0_3px_0_0_#D97706] scale-105'
-                  : isCurrent
-                  ? 'bg-white border-2 border-indigo-400 text-indigo-400 shadow-sm'
-                  : 'bg-white/70 border border-slate-200 text-slate-300'
-              }`}
-            >
-              <Star className={`w-4 h-4 sm:w-5 sm:h-5 ${filled ? 'fill-white' : ''}`} />
-            </div>
-          );
-        })}
+      {/* Round Progress Stars Strip + 3D Flight Turn Counter */}
+      <div className="flex flex-col items-center gap-1.5 my-2">
+        <div className="flex items-center justify-center gap-2">
+          {Array.from({ length: TOTAL_ROUNDS }).map((_, i) => {
+            const filled = i < setStars;
+            const isCurrent = i === round - 1 && !filled;
+            return (
+              <div
+                key={i}
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-transform ${
+                  filled
+                    ? 'bg-amber-400 text-white shadow-[0_3px_0_0_#D97706] scale-105'
+                    : isCurrent
+                    ? 'bg-white border-2 border-indigo-400 text-indigo-400 shadow-sm'
+                    : 'bg-white/70 border border-slate-200 text-slate-300'
+                }`}
+              >
+                <Star className={`w-4 h-4 sm:w-5 sm:h-5 ${filled ? 'fill-white' : ''}`} />
+              </div>
+            );
+          })}
+        </div>
+        <FlightTurnProgressStrip
+          progress={showFlightReward ? 5 : profile.flightTurnProgress}
+          turnsAvailable={profile.flightTurns}
+          language={language}
+        />
       </div>
 
       {/* Center Mascot + Interactive Play Area */}
@@ -1516,6 +1566,21 @@ export function GameStage({
           </div>
         </div>
       )}
+
+      <FlightTurnRewardModal
+        open={showFlightReward && !externalLocked}
+        equippedWardrobe={profile.equippedWardrobe}
+        turnsAvailable={profile.flightTurns}
+        language={language}
+        onPlaySkyRun={() => {
+          soundEngine.clearScheduled();
+          setShowFlightReward(false);
+          setPendingFinalVictory(false);
+          pendingNextRoundRef.current = {};
+          onLaunchSkyRun();
+        }}
+        onContinue={handleContinueAfterFlightReward}
+      />
 
       <ConfirmCloseDialog
         open={confirmExitTarget !== null}

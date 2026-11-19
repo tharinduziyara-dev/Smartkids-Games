@@ -22,6 +22,7 @@ import {
   User,
   Volume2,
   VolumeX,
+  Wand2,
   X as MultiplyIcon,
 } from 'lucide-react';
 import {
@@ -67,6 +68,7 @@ interface TitleScreenProps {
   onStartMusicMode: (mode: GameMode) => void;
   onStartMathMode: (mode: MathMode) => void;
   onStartEnglishMode: (mode: EnglishMode) => void;
+  onStartSkyRun: (category: AppCategory) => void;
 }
 
 export function TitleScreen({
@@ -90,6 +92,7 @@ export function TitleScreen({
   onStartMusicMode,
   onStartMathMode,
   onStartEnglishMode,
+  onStartSkyRun,
 }: TitleScreenProps) {
   const t = TEXT[language];
   const [mascotMood, setMascotMood] = useState<MascotMood>('idle');
@@ -158,6 +161,108 @@ export function TitleScreen({
       icon: BookOpen,
     },
   ];
+
+  const renderSkyRunCard = (category: AppCategory) => {
+    const hasTurns = profile.flightTurns > 0;
+    const theme =
+      category === 'music'
+        ? {
+            bg: 'from-pink-50/90 via-white to-sky-50/90',
+            iconBg: 'bg-pink-100 text-pink-600',
+            accentText: 'text-pink-600',
+            btnGrad: 'linear-gradient(180deg, #F472B6 0%, #DB2777 100%)',
+            btnBevel: '#9D174D',
+          }
+        : category === 'math'
+        ? {
+            bg: 'from-indigo-50/90 via-white to-sky-50/90',
+            iconBg: 'bg-indigo-100 text-indigo-600',
+            accentText: 'text-indigo-600',
+            btnGrad: 'linear-gradient(180deg, #818CF8 0%, #4F46E5 100%)',
+            btnBevel: '#312E81',
+          }
+        : {
+            bg: 'from-emerald-50/90 via-white to-sky-50/90',
+            iconBg: 'bg-emerald-100 text-emerald-600',
+            accentText: 'text-emerald-600',
+            btnGrad: 'linear-gradient(180deg, #34D399 0%, #059669 100%)',
+            btnBevel: '#065F46',
+          };
+
+    return (
+      <div
+        className={`col-span-full clay-card clay-card-interactive rounded-[28px] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-2 border-white bg-gradient-to-r ${theme.bg}`}
+      >
+        <div className="flex items-start sm:items-center gap-4">
+          <div
+            className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${theme.iconBg}`}
+          >
+            <Wand2 className="w-6 h-6" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <h2 className="font-display text-xl font-bold text-slate-900">
+                {t.skyRun.cardTitle}
+              </h2>
+              <span className={`text-xs font-bold tabular-nums ${theme.accentText}`}>
+                {t.skyRun.earnedTurnsLabel(profile.flightTurns)} ·{' '}
+                {t.skyRun.nextTurnProgress(profile.flightTurnProgress)} · {levelText.label}
+              </span>
+            </div>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              {t.skyRun.cardSubtitle}
+            </p>
+            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+              <div className="flex items-center gap-1" aria-hidden="true">
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={`h-2 w-5 rounded-full transition-colors ${
+                      idx < profile.flightTurnProgress
+                        ? 'bg-pink-500'
+                        : 'bg-slate-200'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-xs font-semibold text-slate-500">
+                {t.skyRun.useOneTurnHint}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {hasTurns ? (
+          <button
+            type="button"
+            onClick={() => {
+              soundEngine.playMagicWand();
+              onStartSkyRun(category);
+            }}
+            style={{
+              background: theme.btnGrad,
+              boxShadow: `0 6px 0 0 ${theme.btnBevel}, 0 10px 18px -4px rgba(15, 23, 42, 0.18)`,
+            }}
+            className="toy-btn w-full sm:w-auto sm:min-w-[230px] min-h-[48px] px-5 py-2.5 rounded-2xl text-white font-display text-base sm:text-lg font-bold flex items-center justify-center gap-2 border-2 border-white/40 cursor-pointer whitespace-nowrap shrink-0"
+          >
+            <Sparkles className="w-5 h-5 shrink-0" />
+            <span>{t.skyRun.playWithTurnCta(profile.flightTurns)}</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled
+            aria-disabled="true"
+            style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
+            className="w-full sm:w-auto sm:min-w-[230px] min-h-[48px] px-5 py-2.5 rounded-2xl bg-slate-100 text-slate-500 font-display text-sm sm:text-base font-bold flex items-center justify-center gap-2 border-2 border-slate-200 cursor-not-allowed whitespace-nowrap shrink-0"
+          >
+            <Lock className="w-4 h-4 shrink-0" />
+            <span>{t.skyRun.needTurnsCta(profile.flightTurnProgress)}</span>
+          </button>
+        )}
+      </div>
+    );
+  };
 
   const musicModes: Array<{
     mode: GameMode;
@@ -804,6 +909,9 @@ export function TitleScreen({
                 </div>
               );
             })}
+
+            {/* Featured 3D Endless Flight Card (Music) */}
+            {renderSkyRunCard('music')}
           </section>
         )}
 
@@ -860,6 +968,9 @@ export function TitleScreen({
                 </div>
               );
             })}
+
+            {/* Featured 3D Endless Flight Card (Math) */}
+            {renderSkyRunCard('math')}
           </section>
         )}
 
@@ -955,6 +1066,9 @@ export function TitleScreen({
                 <span>{t.dictionary.openBtn}</span>
               </button>
             </div>
+
+            {/* Featured 3D Endless Flight Card (English) */}
+            {renderSkyRunCard('english')}
           </section>
         )}
       </main>
