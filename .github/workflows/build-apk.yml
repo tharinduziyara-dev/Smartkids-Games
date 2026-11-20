@@ -31,7 +31,7 @@ jobs:
 
       - name: Setup Capacitor & AdMob
         run: |
-          npx cap init "Smart Kids" "com.tharindu.smartkids" --web-dir=dist
+          echo '{"appId": "com.tharindu.smartkids", "appName": "Smart Kids", "webDir": "dist"}' > capacitor.config.json
           npx cap add android
           npx cap sync android
 
