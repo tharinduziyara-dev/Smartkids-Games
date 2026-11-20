@@ -100,6 +100,10 @@ export const TEXT: Record<
       confirmExitGameMessage: string;
       yes: string;
       no: string;
+      quizGameOverTitle: string;
+      quizGameOverSubtitle: string;
+      tryAgain: string;
+      scoreBeforeLoss: (stars: number, total: number) => string;
     };
     music: {
       modes: Record<
@@ -423,6 +427,11 @@ export const TEXT: Record<
       confirmExitGameMessage: 'Do you want to close this game?',
       yes: 'Yes',
       no: 'No',
+      quizGameOverTitle: 'Game Over',
+      quizGameOverSubtitle:
+        'Oops! One wrong answer ends the quiz and 3D Flight will not unlock. Answer every question right on the first try!',
+      tryAgain: 'Try Again',
+      scoreBeforeLoss: (stars, total) => `Correct Before Loss: ${stars} / ${total}`,
     },
     music: {
       modes: {
@@ -818,12 +827,12 @@ export const TEXT: Record<
       turnProgressLabel: '3D Flight Turn',
       earnedTurnsLabel: (count) => `${count} ${count === 1 ? 'Turn' : 'Turns'} Ready`,
       nextTurnProgress: (prog) => `Next turn: ${prog}/5`,
-      needTurnsCta: (prog) => `Earn 5 Correct Answers (${prog}/5)`,
+      needTurnsCta: (_prog) => `Win a 5/5 Quiz to Unlock`,
       playWithTurnCta: (turns) => `Play Fairy Sky Flight (3D) · ${turns}`,
-      useOneTurnHint: 'Every 5 correct answers earns 1 free 3D flight turn',
+      useOneTurnHint: 'Answer all 5 questions right on the first try to unlock 1 free 3D flight turn',
       rewardPopupTitle: '3D Flight Turn Earned!',
       rewardPopupSubtitle:
-        'Awesome job! You got 5 correct answers and unlocked a free turn of Fairy Sky Flight (3D)!',
+        'Awesome job! You answered all 5 questions right on the first click and unlocked a free turn of Fairy Sky Flight (3D)!',
       rewardPopupPlayBtn: 'Play Fairy Sky Flight (3D)',
       rewardPopupContinueBtn: 'Keep Playing',
       flyAgainWithTurnBtn: (turns) => `Fly Again (${turns} Left)`,
@@ -947,6 +956,11 @@ export const TEXT: Record<
       confirmExitGameMessage: 'ඔබට මෙම ක්‍රීඩාවෙන් ඉවත් වීමට අවශ්‍යද?',
       yes: 'ඔව්',
       no: 'නැහැ',
+      quizGameOverTitle: 'ක්‍රීඩාව අවසන්!',
+      quizGameOverSubtitle:
+        'එක් වැරදි පිළිතුරකින් ක්‍රීඩාව අවසන් වන අතර 3D ක්‍රීඩාව අගුළු නොඇරේ. සෑම ප්‍රශ්නයකටම පළමු වරටම නිවැරදිව පිළිතුරු දෙන්න!',
+      tryAgain: 'නැවත උත්සාහ කරන්න',
+      scoreBeforeLoss: (stars, total) => `නිවැරදි පිළිතුරු: ${stars} / ${total}`,
     },
     music: {
       modes: {
@@ -1343,12 +1357,12 @@ export const TEXT: Record<
       turnProgressLabel: '3D පියාසැරි වාරය',
       earnedTurnsLabel: (count) => `සූදානම් වාර: ${count}`,
       nextTurnProgress: (prog) => `ඊළඟ වාරය: ${prog}/5`,
-      needTurnsCta: (prog) => `නිවැරදි පිළිතුරු 5ක් දෙන්න (${prog}/5)`,
+      needTurnsCta: (_prog) => `අගුළු ඇරීමට 5/5 දිනන්න`,
       playWithTurnCta: (turns) => `Fairy Sky Flight (3D) ක්‍රීඩා කරන්න · ${turns}`,
-      useOneTurnHint: 'නිවැරදි පිළිතුරු 5කට වරක් නොමිලේ 3D පියාසැරි වාරයක් ලැබේ',
+      useOneTurnHint: 'ප්‍රශ්න 5ම පළමු වරටම නිවැරදිව විසඳා නොමිලේ 3D පියාසැරි වාරයක් දිනාගන්න',
       rewardPopupTitle: '3D පියාසැරි වාරයක් දිනාගත්තා!',
       rewardPopupSubtitle:
-        'නියමයි! ඔබ නිවැරදි පිළිතුරු 5ක් ලබා දී Fairy Sky Flight (3D) නොමිලේ වාරයක් දිනා ගත්තා!',
+        'නියමයි! ඔබ ප්‍රශ්න 5ම පළමු වරටම නිවැරදිව පිළිතුරු දී Fairy Sky Flight (3D) නොමිලේ වාරයක් දිනා ගත්තා!',
       rewardPopupPlayBtn: 'Play Fairy Sky Flight (3D)',
       rewardPopupContinueBtn: 'දිගටම සෙල්ලම් කරන්න',
       flyAgainWithTurnBtn: (turns) => `නැවත පියාසර කරන්න (${turns}ක් ඉතිරියි)`,

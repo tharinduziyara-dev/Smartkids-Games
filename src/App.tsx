@@ -183,26 +183,56 @@ export default function App() {
     });
   }, []);
 
-  const handleStartMusicMode = useCallback((mode: GameMode) => {
-    setSelectedCategory('music');
-    setActiveMusicMode(mode);
-    setIsSkyRun(false);
-    setGameState('PLAYING');
+  const handleResetFlightProgress = useCallback(() => {
+    setStore((prev) => {
+      const current = prev.profiles.find((p) => p.id === prev.activeProfileId);
+      if (!current || current.flightTurnProgress === 0) return prev;
+      return {
+        ...prev,
+        profiles: prev.profiles.map((p) =>
+          p.id === prev.activeProfileId
+            ? {
+                ...p,
+                flightTurnProgress: 0,
+              }
+            : p
+        ),
+      };
+    });
   }, []);
 
-  const handleStartMathMode = useCallback((mode: MathMode) => {
-    setSelectedCategory('math');
-    setActiveMathMode(mode);
-    setIsSkyRun(false);
-    setGameState('PLAYING');
-  }, []);
+  const handleStartMusicMode = useCallback(
+    (mode: GameMode) => {
+      handleResetFlightProgress();
+      setSelectedCategory('music');
+      setActiveMusicMode(mode);
+      setIsSkyRun(false);
+      setGameState('PLAYING');
+    },
+    [handleResetFlightProgress]
+  );
 
-  const handleStartEnglishMode = useCallback((mode: EnglishMode) => {
-    setSelectedCategory('english');
-    setActiveEnglishMode(mode);
-    setIsSkyRun(false);
-    setGameState('PLAYING');
-  }, []);
+  const handleStartMathMode = useCallback(
+    (mode: MathMode) => {
+      handleResetFlightProgress();
+      setSelectedCategory('math');
+      setActiveMathMode(mode);
+      setIsSkyRun(false);
+      setGameState('PLAYING');
+    },
+    [handleResetFlightProgress]
+  );
+
+  const handleStartEnglishMode = useCallback(
+    (mode: EnglishMode) => {
+      handleResetFlightProgress();
+      setSelectedCategory('english');
+      setActiveEnglishMode(mode);
+      setIsSkyRun(false);
+      setGameState('PLAYING');
+    },
+    [handleResetFlightProgress]
+  );
 
   const handleConsumeFlightTurn = useCallback(() => {
     setStore((prev) => ({
@@ -375,17 +405,19 @@ export default function App() {
   const handleBackToCategory = useCallback(() => {
     soundEngine.clearScheduled();
     stopSpeaking();
+    handleResetFlightProgress();
     setIsSkyRun(false);
     setGameState('TITLE_MENU');
-  }, []);
+  }, [handleResetFlightProgress]);
 
   const handleBackToHome = useCallback(() => {
     soundEngine.clearScheduled();
     stopSpeaking();
+    handleResetFlightProgress();
     setIsSkyRun(false);
     setSelectedCategory(null);
     setGameState('TITLE_MENU');
-  }, []);
+  }, [handleResetFlightProgress]);
 
   return (
     <div className="min-h-dvh w-full bg-gradient-to-b from-[#EAF3FF] via-[#F2F7FF] to-[#E3EEFF] text-slate-900 relative overflow-x-hidden">
@@ -451,6 +483,7 @@ export default function App() {
             onOpenRewards={() => setShowRewards(true)}
             onToggleMute={handleToggleMute}
             onRecordProgress={handleRecordProgress}
+            onResetFlightProgress={handleResetFlightProgress}
             onTriggerConfetti={handleTriggerConfetti}
             onLaunchSkyRun={() => handleStartSkyRun('math')}
             onBackToCategory={handleBackToCategory}
@@ -469,6 +502,7 @@ export default function App() {
             onOpenRewards={() => setShowRewards(true)}
             onToggleMute={handleToggleMute}
             onRecordProgress={handleRecordProgress}
+            onResetFlightProgress={handleResetFlightProgress}
             onTriggerConfetti={handleTriggerConfetti}
             onLaunchSkyRun={() => handleStartSkyRun('english')}
             onBackToCategory={handleBackToCategory}
@@ -489,6 +523,7 @@ export default function App() {
             onOpenRewards={() => setShowRewards(true)}
             onToggleMute={handleToggleMute}
             onRecordProgress={handleRecordProgress}
+            onResetFlightProgress={handleResetFlightProgress}
             onTriggerConfetti={handleTriggerConfetti}
             onLaunchSkyRun={() => handleStartSkyRun('music')}
             onExitToMenu={handleBackToCategory}

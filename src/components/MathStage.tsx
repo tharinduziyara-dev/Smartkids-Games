@@ -34,6 +34,7 @@ import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 import {
   FlightTurnProgressStrip,
   FlightTurnRewardModal,
+  QuizGameOverModal,
 } from './FlightTurnWidgets';
 
 interface MathStageProps {
@@ -56,6 +57,7 @@ interface MathStageProps {
     newRewards: RewardItem[];
     earnedFlightTurn: boolean;
   };
+  onResetFlightProgress: () => void;
   onTriggerConfetti: (intensity: 'small' | 'big') => void;
   onLaunchSkyRun: () => void;
   onBackToCategory: () => void;
@@ -83,6 +85,7 @@ export function MathStage({
   onOpenRewards,
   onToggleMute,
   onRecordProgress,
+  onResetFlightProgress,
   onTriggerConfetti,
   onLaunchSkyRun,
   onBackToCategory,
@@ -95,6 +98,8 @@ export function MathStage({
   const [streak, setStreak] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isVictory, setIsVictory] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [gameOverReason, setGameOverReason] = useState('');
   const [confirmExitTarget, setConfirmExitTarget] = useState<'category' | 'home' | null>(null);
   const [showFlightReward, setShowFlightReward] = useState(false);
   const [pendingFinalVictory, setPendingFinalVictory] = useState(false);
@@ -133,6 +138,10 @@ export function MathStage({
     setStreak(0);
     setIsPaused(false);
     setIsVictory(false);
+    setIsGameOver(false);
+    setGameOverReason('');
+    setShowFlightReward(false);
+    setPendingFinalVictory(false);
     loadRound(1);
     return () => {
       soundEngine.clearScheduled();
@@ -141,7 +150,16 @@ export function MathStage({
 
   const submitAnswer = useCallback(
     (candidate: number) => {
-      if (roundResolved || isPaused || isVictory || Number.isNaN(candidate)) return;
+      if (
+        roundResolved ||
+        isPaused ||
+        isVictory ||
+        isGameOver ||
+        showFlightReward ||
+        Number.isNaN(candidate)
+      ) {
+        return;
+      }
 
       if (candidate === problem.answer) {
         setRoundResolved(true);
@@ -196,39 +214,44 @@ export function MathStage({
           }
         }, earnedFlightTurn ? 950 : rewardNames.length > 0 ? 1850 : 1500);
       } else {
+        soundEngine.clearScheduled();
+        setRoundResolved(true);
         setStreak(0);
         setMascotMood('confused');
         setMascotMessage(t.math.wrongMsg);
+        setGameOverReason(t.math.wrongMsg);
+        setIsGameOver(true);
+        onResetFlightProgress();
         soundEngine.playGentleOops();
-        if (useKeypad) {
-          setTypedAnswer('');
-        }
-        soundEngine.schedule(() => {
-          setMascotMood((m) => (m === 'confused' ? 'idle' : m));
-        }, 1850);
+        soundEngine.playCollapseThud();
       }
     },
     [
+      isGameOver,
       isPaused,
       isVictory,
       level,
       loadRound,
       onRecordProgress,
+      onResetFlightProgress,
       onTriggerConfetti,
       problem.answer,
       problem.expression,
       profile.mascot,
       round,
       roundResolved,
+      showFlightReward,
       streak,
       t,
-      useKeypad,
     ]
   );
 
   const handleRestartSet = useCallback(() => {
     soundEngine.playTapPop();
+    onResetFlightProgress();
     setIsVictory(false);
+    setIsGameOver(false);
+    setGameOverReason('');
     setIsPaused(false);
     setShowFlightReward(false);
     setPendingFinalVictory(false);
@@ -236,7 +259,7 @@ export function MathStage({
     setSetStars(0);
     setStreak(0);
     loadRound(1);
-  }, [loadRound]);
+  }, [loadRound, onResetFlightProgress]);
 
   const handleContinueAfterFlightReward = useCallback(() => {
     setShowFlightReward(false);
@@ -254,16 +277,16 @@ export function MathStage({
   useEffect(() => {
     if (externalLocked) {
       soundEngine.clearScheduled();
-      if (!isVictory) {
+      if (!isVictory && !isGameOver) {
         setIsPaused(true);
       }
     }
-  }, [externalLocked, isVictory]);
+  }, [externalLocked, isGameOver, isVictory]);
 
   // Keyboard support
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (confirmExitTarget !== null || externalLocked || showFlightReward || e.repeat) return;
+      if (confirmExitTarget !== null || externalLocked || showFlightReward || isGameOver || e.repeat) return;
       if (e.key === 'Escape') {
         if (!isVictory) setIsPaused((p) => !p);
         return;
@@ -288,7 +311,7 @@ export function MathStage({
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [confirmExitTarget, externalLocked, isPaused, isVictory, problem.choices, roundResolved, showFlightReward, submitAnswer, typedAnswer, useKeypad]);
+  }, [confirmExitTarget, externalLocked, isGameOver, isPaused, isVictory, problem.choices, roundResolved, showFlightReward, submitAnswer, typedAnswer, useKeypad]);
 
   const activeHint = language === 'si' ? problem.hintSi : problem.hint;
 
@@ -301,7 +324,7 @@ export function MathStage({
             type="button"
             onClick={() => {
               soundEngine.playTapPop();
-              if (isVictory) {
+              if (isVictory || isGameOver) {
                 soundEngine.clearScheduled();
                 onBackToCategory();
               } else {
@@ -567,7 +590,7 @@ export function MathStage({
       </footer>
 
       {/* Pause Modal */}
-      {isPaused && !isVictory && (
+      {isPaused && !isVictory && !isGameOver && (
         <div
           className="fixed inset-0 z-40 bg-slate-900/45 flex items-center justify-center p-4"
           role="dialog"
@@ -593,6 +616,7 @@ export function MathStage({
                       type="button"
                       onClick={() => {
                         soundEngine.playTapPop();
+                        onResetFlightProgress();
                         onSelectLevel(lvlId);
                         setIsPaused(false);
                       }}
@@ -759,6 +783,21 @@ export function MathStage({
           onLaunchSkyRun();
         }}
         onContinue={handleContinueAfterFlightReward}
+      />
+
+      <QuizGameOverModal
+        open={isGameOver && !externalLocked}
+        mascot={profile.mascot}
+        equippedWardrobe={profile.equippedWardrobe}
+        reason={gameOverReason}
+        correctCount={setStars}
+        totalRounds={TOTAL_ROUNDS}
+        language={language}
+        onTryAgain={handleRestartSet}
+        onExit={() => {
+          soundEngine.clearScheduled();
+          onBackToCategory();
+        }}
       />
 
       <ConfirmCloseDialog

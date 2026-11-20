@@ -44,6 +44,7 @@ import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 import {
   FlightTurnProgressStrip,
   FlightTurnRewardModal,
+  QuizGameOverModal,
 } from './FlightTurnWidgets';
 
 interface GameStageProps {
@@ -68,6 +69,7 @@ interface GameStageProps {
     newRewards: RewardItem[];
     earnedFlightTurn: boolean;
   };
+  onResetFlightProgress: () => void;
   onTriggerConfetti: (intensity: 'small' | 'big') => void;
   onLaunchSkyRun: () => void;
   onExitToMenu: () => void;
@@ -100,6 +102,7 @@ export function GameStage({
   onOpenRewards,
   onToggleMute,
   onRecordProgress,
+  onResetFlightProgress,
   onTriggerConfetti,
   onLaunchSkyRun,
   onExitToMenu,
@@ -115,6 +118,8 @@ export function GameStage({
   const [streak, setStreak] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isVictory, setIsVictory] = useState<boolean>(false);
+  const [isGameOver, setIsGameOver] = useState<boolean>(false);
+  const [gameOverReason, setGameOverReason] = useState<string>('');
   const [confirmExitTarget, setConfirmExitTarget] = useState<'menu' | 'home' | null>(null);
   const [showFlightReward, setShowFlightReward] = useState<boolean>(false);
   const [pendingFinalVictory, setPendingFinalVictory] = useState<boolean>(false);
@@ -360,6 +365,8 @@ export function GameStage({
     setSetStars(0);
     setStreak(0);
     setIsVictory(false);
+    setIsGameOver(false);
+    setGameOverReason('');
     setIsPaused(false);
     setShowFlightReward(false);
     setPendingFinalVictory(false);
@@ -432,9 +439,28 @@ export function GameStage({
     [level, onRecordProgress, onTriggerConfetti, profile.mascot, round, setupRound, streak]
   );
 
+  const triggerStrictGameOver = useCallback(
+    (msg: string) => {
+      soundEngine.clearScheduled();
+      setIsPlayingPrompt(false);
+      setPlayingBeatIdx(null);
+      setActivePitchCard(null);
+      setRoundResolved(true);
+      setStreak(0);
+      setOwlMood('confused');
+      setOwlMessage(msg);
+      setGameOverReason(msg);
+      setIsGameOver(true);
+      onResetFlightProgress();
+      soundEngine.playGentleOops();
+      soundEngine.playCollapseThud();
+    },
+    [onResetFlightProgress]
+  );
+
   const handlePianoPress = useCallback(
     (note: ToyNote) => {
-      if (isPlayingPrompt || roundResolved || isPaused || isVictory) return;
+      if (isPlayingPrompt || roundResolved || isPaused || isVictory || isGameOver || showFlightReward) return;
 
       flashKey(note.id);
       soundEngine.playNote(note.freq, instrumentRef.current, 0.72);
@@ -446,15 +472,9 @@ export function GameStage({
             note.id
           );
         } else {
-          setStreak(0);
-          setOwlMood('confused');
-          setOwlMessage(
+          triggerStrictGameOver(
             tRef.current.music.feedback.guessWrong(note.western, note.sargam)
           );
-          soundEngine.schedule(() => soundEngine.playGentleOops(), 220);
-          soundEngine.schedule(() => {
-            setOwlMood((m) => (m === 'confused' ? 'idle' : m));
-          }, 1850);
         }
       } else if (mode === 'COPY_MELODY') {
         const expected = melodySeq[playerMelodyIdx];
@@ -470,35 +490,31 @@ export function GameStage({
             );
           }
         } else {
-          setStreak(0);
           setPlayerMelodyIdx(0);
-          setOwlMood('confused');
-          setOwlMessage(tRef.current.music.feedback.melodyOops);
-          soundEngine.schedule(() => soundEngine.playGentleOops(), 200);
-          soundEngine.schedule(() => {
-            playMelodyPrompt(melodySeq);
-          }, 1850);
+          triggerStrictGameOver(tRef.current.music.feedback.melodyOops);
         }
       }
     },
     [
       flashKey,
       handleRoundSuccess,
+      isGameOver,
       isPaused,
       isPlayingPrompt,
       isVictory,
       melodySeq,
       mode,
-      playMelodyPrompt,
       playerMelodyIdx,
       roundResolved,
+      showFlightReward,
       targetNote,
+      triggerStrictGameOver,
     ]
   );
 
   const handlePitchChoice = useCallback(
     (choice: 'higher' | 'lower') => {
-      if (isPlayingPrompt || roundResolved || isPaused || isVictory) return;
+      if (isPlayingPrompt || roundResolved || isPaused || isVictory || isGameOver || showFlightReward) return;
 
       soundEngine.playTapPop();
       const firstFreq = EXTENDED_NOTES[pitchPair[0]].freq;
@@ -514,21 +530,25 @@ export function GameStage({
           )
         );
       } else {
-        setStreak(0);
-        setOwlMood('confused');
-        setOwlMessage(tRef.current.music.feedback.highLowWrong);
-        soundEngine.schedule(() => soundEngine.playGentleOops(), 140);
-        soundEngine.schedule(() => {
-          setOwlMood((m) => (m === 'confused' ? 'idle' : m));
-        }, 1850);
+        triggerStrictGameOver(tRef.current.music.feedback.highLowWrong);
       }
     },
-    [handleRoundSuccess, isPaused, isPlayingPrompt, isVictory, pitchPair, roundResolved]
+    [
+      handleRoundSuccess,
+      isGameOver,
+      isPaused,
+      isPlayingPrompt,
+      isVictory,
+      pitchPair,
+      roundResolved,
+      showFlightReward,
+      triggerStrictGameOver,
+    ]
   );
 
   const handleChordQualityClick = useCallback(
     (qualityId: ChordQualityId) => {
-      if (isPlayingPrompt || roundResolved || isPaused || isVictory) return;
+      if (isPlayingPrompt || roundResolved || isPaused || isVictory || isGameOver || showFlightReward) return;
 
       soundEngine.playTapPop();
 
@@ -549,26 +569,23 @@ export function GameStage({
           targetChord
         );
       } else {
-        setStreak(0);
-        setOwlMood('confused');
         const pickedQualName =
           tRef.current.music.chordQualities[qualityId]?.label ??
           CHORD_QUALITY_BY_ID[qualityId].label;
-        setOwlMessage(tRef.current.music.feedback.chordWrong(pickedQualName));
-        soundEngine.schedule(() => soundEngine.playGentleOops(), 140);
-        soundEngine.schedule(() => {
-          setOwlMood((m) => (m === 'confused' ? 'idle' : m));
-        }, 1850);
+        triggerStrictGameOver(tRef.current.music.feedback.chordWrong(pickedQualName));
       }
     },
     [
       handleRoundSuccess,
+      isGameOver,
       isPaused,
       isPlayingPrompt,
       isVictory,
       levelConfig.exactChordMode,
       roundResolved,
+      showFlightReward,
       targetChord,
+      triggerStrictGameOver,
     ]
   );
 
@@ -578,6 +595,8 @@ export function GameStage({
       roundResolved ||
       isPaused ||
       isVictory ||
+      isGameOver ||
+      showFlightReward ||
       !selectedChordRoot ||
       !selectedChordQuality
     ) {
@@ -599,10 +618,8 @@ export function GameStage({
         targetChord
       );
     } else {
-      setStreak(0);
-      setOwlMood('confused');
       if (rootMatch && !qualityMatch) {
-        setOwlMessage(
+        triggerStrictGameOver(
           tRef.current.music.feedback.exactChordRightRoot(
             NOTE_BY_ID[selectedChordRoot].western
           )
@@ -611,28 +628,29 @@ export function GameStage({
         const qualName =
           tRef.current.music.chordQualities[selectedChordQuality]?.label ??
           CHORD_QUALITY_BY_ID[selectedChordQuality].label;
-        setOwlMessage(tRef.current.music.feedback.exactChordRightType(qualName));
+        triggerStrictGameOver(
+          tRef.current.music.feedback.exactChordRightType(qualName)
+        );
       } else {
-        setOwlMessage(tRef.current.music.feedback.exactChordWrongBoth);
+        triggerStrictGameOver(tRef.current.music.feedback.exactChordWrongBoth);
       }
-      soundEngine.schedule(() => soundEngine.playGentleOops(), 140);
-      soundEngine.schedule(() => {
-        setOwlMood((m) => (m === 'confused' ? 'idle' : m));
-      }, 1850);
     }
   }, [
     handleRoundSuccess,
+    isGameOver,
     isPaused,
     isPlayingPrompt,
     isVictory,
     roundResolved,
     selectedChordQuality,
     selectedChordRoot,
+    showFlightReward,
     targetChord,
+    triggerStrictGameOver,
   ]);
 
   const handleListenAgain = useCallback(() => {
-    if (isPlayingPrompt || roundResolved || isPaused || isVictory) return;
+    if (isPlayingPrompt || roundResolved || isPaused || isVictory || isGameOver) return;
 
     if (mode === 'GUESS_NOTE') {
       playGuessPrompt(targetNote);
@@ -645,6 +663,7 @@ export function GameStage({
       playChordPrompt(targetChord);
     }
   }, [
+    isGameOver,
     isPaused,
     isPlayingPrompt,
     isVictory,
@@ -662,7 +681,10 @@ export function GameStage({
 
   const handleRestartSet = useCallback(() => {
     soundEngine.playTapPop();
+    onResetFlightProgress();
     setIsVictory(false);
+    setIsGameOver(false);
+    setGameOverReason('');
     setIsPaused(false);
     setShowFlightReward(false);
     setPendingFinalVictory(false);
@@ -671,7 +693,7 @@ export function GameStage({
     setSetStars(0);
     setStreak(0);
     setupRound(1);
-  }, [setupRound]);
+  }, [onResetFlightProgress, setupRound]);
 
   const handleContinueAfterFlightReward = useCallback(() => {
     setShowFlightReward(false);
@@ -703,15 +725,15 @@ export function GameStage({
       setIsPlayingPrompt(false);
       setPlayingBeatIdx(null);
       setActivePitchCard(null);
-      if (!isVictory) {
+      if (!isVictory && !isGameOver) {
         setIsPaused(true);
       }
     }
-  }, [externalLocked, isVictory]);
+  }, [externalLocked, isGameOver, isVictory]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (confirmExitTarget !== null || externalLocked || showFlightReward || e.repeat) return;
+      if (confirmExitTarget !== null || externalLocked || showFlightReward || isGameOver || e.repeat) return;
       if (e.key === 'Escape') {
         if (!isVictory) {
           if (isPaused) {
@@ -787,6 +809,7 @@ export function GameStage({
     handleListenAgain,
     handlePianoPress,
     handlePitchChoice,
+    isGameOver,
     isPaused,
     isVictory,
     level,
@@ -804,7 +827,7 @@ export function GameStage({
             type="button"
             onClick={() => {
               soundEngine.playTapPop();
-              if (isVictory) {
+              if (isVictory || isGameOver) {
                 soundEngine.clearScheduled();
                 onExitToMenu();
               } else {
@@ -1331,7 +1354,7 @@ export function GameStage({
       </footer>
 
       {/* Pause Modal */}
-      {isPaused && !isVictory && (
+      {isPaused && !isVictory && !isGameOver && (
         <div
           className="fixed inset-0 z-40 bg-slate-900/45 flex items-center justify-center p-4"
           role="dialog"
@@ -1357,6 +1380,7 @@ export function GameStage({
                       type="button"
                       onClick={() => {
                         soundEngine.playTapPop();
+                        onResetFlightProgress();
                         onSelectLevel(lvlId);
                         setIsPaused(false);
                       }}
@@ -1580,6 +1604,21 @@ export function GameStage({
           onLaunchSkyRun();
         }}
         onContinue={handleContinueAfterFlightReward}
+      />
+
+      <QuizGameOverModal
+        open={isGameOver && !externalLocked}
+        mascot={profile.mascot}
+        equippedWardrobe={profile.equippedWardrobe}
+        reason={gameOverReason}
+        correctCount={setStars}
+        totalRounds={TOTAL_ROUNDS}
+        language={language}
+        onTryAgain={handleRestartSet}
+        onExit={() => {
+          soundEngine.clearScheduled();
+          onExitToMenu();
+        }}
       />
 
       <ConfirmCloseDialog

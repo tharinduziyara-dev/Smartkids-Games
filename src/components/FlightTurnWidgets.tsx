@@ -1,5 +1,5 @@
-import { Play, Sparkles, Wand2 } from 'lucide-react';
-import { EquippedWardrobe } from '../types/game';
+import { Home, Play, RotateCcw, Sparkles, Wand2, XCircle } from 'lucide-react';
+import { EquippedWardrobe, MascotId } from '../types/game';
 import { AppLanguage, TEXT } from '../i18n/translations';
 import { MascotStage } from './MascotStage';
 import { soundEngine } from '../audio/soundEngine';
@@ -144,6 +144,97 @@ export function FlightTurnRewardModal({
           >
             <Play className="w-4 h-4 fill-current" />
             <span>{st.rewardPopupContinueBtn}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface QuizGameOverModalProps {
+  open: boolean;
+  mascot: MascotId;
+  equippedWardrobe: EquippedWardrobe;
+  reason?: string;
+  correctCount: number;
+  totalRounds: number;
+  language?: AppLanguage;
+  onTryAgain: () => void;
+  onExit: () => void;
+}
+
+export function QuizGameOverModal({
+  open,
+  mascot,
+  equippedWardrobe,
+  reason,
+  correctCount,
+  totalRounds,
+  language = 'en',
+  onTryAgain,
+  onExit,
+}: QuizGameOverModalProps) {
+  if (!open) return null;
+
+  const c = TEXT[language].common;
+
+  return (
+    <div
+      className="fixed inset-0 z-40 bg-slate-900/60 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={c.quizGameOverTitle}
+    >
+      <div className="clay-surface rounded-[34px] p-6 sm:p-8 w-full max-w-md border-2 border-white flex flex-col items-center gap-4 text-center shadow-2xl bg-gradient-to-b from-rose-50 via-white to-amber-50">
+        <div className="flex items-center gap-2 text-rose-600 font-display text-sm font-bold">
+          <XCircle className="w-5 h-5 shrink-0" />
+          <span className="tabular-nums">{c.scoreBeforeLoss(correctCount, totalRounds)}</span>
+        </div>
+
+        <MascotStage
+          mascot={mascot}
+          mood="confused"
+          message={reason || undefined}
+          size="sm"
+          equipped={equippedWardrobe}
+          interactive={false}
+          variant="menu"
+        />
+
+        <div>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-rose-600">
+            {c.quizGameOverTitle}
+          </h2>
+          <p className="mt-1.5 text-sm sm:text-base font-medium text-slate-600 leading-relaxed">
+            {c.quizGameOverSubtitle}
+          </p>
+        </div>
+
+        <div className="w-full flex flex-col gap-2.5 pt-1">
+          <button
+            type="button"
+            onClick={onTryAgain}
+            style={{
+              background: 'linear-gradient(180deg, #FB7185 0%, #E11D48 100%)',
+              boxShadow: '0 6px 0 0 #9F1239, 0 10px 18px -4px rgba(225, 29, 72, 0.35)',
+            }}
+            className="toy-btn w-full min-h-[52px] px-5 py-2.5 rounded-2xl text-white font-display text-lg font-bold flex items-center justify-center gap-2 border-2 border-white/50 cursor-pointer whitespace-nowrap"
+          >
+            <RotateCcw className="w-5 h-5 shrink-0" />
+            <span>{c.tryAgain}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              soundEngine.playTapPop();
+              onExit();
+            }}
+            style={{ boxShadow: '0 5px 0 0 #CBD5E1' }}
+            className="toy-btn w-full min-h-[46px] px-5 py-2 rounded-2xl bg-white text-slate-700 font-display text-base font-bold flex items-center justify-center gap-2 border-2 border-slate-200 cursor-pointer whitespace-nowrap"
+          >
+            <Home className="w-4 h-4 shrink-0" />
+            <span>{c.backToGames}</span>
           </button>
         </div>
       </div>

@@ -34,6 +34,7 @@ import { ConfirmCloseDialog } from './ConfirmCloseDialog';
 import {
   FlightTurnProgressStrip,
   FlightTurnRewardModal,
+  QuizGameOverModal,
 } from './FlightTurnWidgets';
 
 interface EnglishStageProps {
@@ -56,6 +57,7 @@ interface EnglishStageProps {
     newRewards: RewardItem[];
     earnedFlightTurn: boolean;
   };
+  onResetFlightProgress: () => void;
   onTriggerConfetti: (intensity: 'small' | 'big') => void;
   onLaunchSkyRun: () => void;
   onBackToCategory: () => void;
@@ -76,6 +78,7 @@ export function EnglishStage({
   onOpenRewards,
   onToggleMute,
   onRecordProgress,
+  onResetFlightProgress,
   onTriggerConfetti,
   onLaunchSkyRun,
   onBackToCategory,
@@ -88,6 +91,8 @@ export function EnglishStage({
   const [streak, setStreak] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isVictory, setIsVictory] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [gameOverReason, setGameOverReason] = useState('');
   const [confirmExitTarget, setConfirmExitTarget] = useState<'category' | 'home' | null>(null);
   const [showFlightReward, setShowFlightReward] = useState(false);
   const [pendingFinalVictory, setPendingFinalVictory] = useState(false);
@@ -163,6 +168,8 @@ export function EnglishStage({
     setStreak(0);
     setIsPaused(false);
     setIsVictory(false);
+    setIsGameOver(false);
+    setGameOverReason('');
     setShowFlightReward(false);
     setPendingFinalVictory(false);
     loadRound();
@@ -176,11 +183,11 @@ export function EnglishStage({
     if (externalLocked) {
       soundEngine.clearScheduled();
       stopSpeaking();
-      if (!isVictory) {
+      if (!isVictory && !isGameOver) {
         setIsPaused(true);
       }
     }
-  }, [externalLocked, isVictory]);
+  }, [externalLocked, isGameOver, isVictory]);
 
   const handleSuccess = useCallback(
     (msg: string) => {
@@ -249,19 +256,26 @@ export function EnglishStage({
     ]
   );
 
-  const handleWrong = useCallback((msg: string) => {
-    setStreak(0);
-    setMascotMood('confused');
-    setMascotMessage(msg);
-    soundEngine.playGentleOops();
-    soundEngine.schedule(() => {
-      setMascotMood((m) => (m === 'confused' ? 'idle' : m));
-    }, 1850);
-  }, []);
+  const handleWrong = useCallback(
+    (msg: string) => {
+      soundEngine.clearScheduled();
+      stopSpeaking();
+      setRoundResolved(true);
+      setStreak(0);
+      setMascotMood('confused');
+      setMascotMessage(msg);
+      setGameOverReason(msg);
+      setIsGameOver(true);
+      onResetFlightProgress();
+      soundEngine.playGentleOops();
+      soundEngine.playCollapseThud();
+    },
+    [onResetFlightProgress]
+  );
 
   const handleTypedSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (roundResolved || isPaused || isVictory || showFlightReward) return;
+    if (roundResolved || isPaused || isVictory || isGameOver || showFlightReward) return;
     const cleaned = typedWord.trim().toLowerCase();
     if (!cleaned) return;
 
@@ -273,7 +287,7 @@ export function EnglishStage({
   };
 
   const handleMatchChoice = (item: EnglishWordItem) => {
-    if (roundResolved || isPaused || isVictory || showFlightReward) return;
+    if (roundResolved || isPaused || isVictory || isGameOver || showFlightReward) return;
     soundEngine.playTapPop();
 
     if (item.word === target.word) {
@@ -285,7 +299,10 @@ export function EnglishStage({
 
   const handleRestartSet = useCallback(() => {
     soundEngine.playTapPop();
+    onResetFlightProgress();
     setIsVictory(false);
+    setIsGameOver(false);
+    setGameOverReason('');
     setIsPaused(false);
     setShowFlightReward(false);
     setPendingFinalVictory(false);
@@ -293,7 +310,7 @@ export function EnglishStage({
     setSetStars(0);
     setStreak(0);
     loadRound();
-  }, [loadRound]);
+  }, [loadRound, onResetFlightProgress]);
 
   const handleContinueAfterFlightReward = useCallback(() => {
     setShowFlightReward(false);
@@ -322,7 +339,7 @@ export function EnglishStage({
             type="button"
             onClick={() => {
               soundEngine.playTapPop();
-              if (isVictory) {
+              if (isVictory || isGameOver) {
                 soundEngine.clearScheduled();
                 stopSpeaking();
                 onBackToCategory();
@@ -669,7 +686,7 @@ export function EnglishStage({
       </footer>
 
       {/* Pause Modal */}
-      {isPaused && !isVictory && (
+      {isPaused && !isVictory && !isGameOver && (
         <div
           className="fixed inset-0 z-40 bg-slate-900/45 flex items-center justify-center p-4"
           role="dialog"
@@ -695,6 +712,7 @@ export function EnglishStage({
                       type="button"
                       onClick={() => {
                         soundEngine.playTapPop();
+                        onResetFlightProgress();
                         onSelectLevel(lvlId);
                         setIsPaused(false);
                       }}
@@ -863,6 +881,22 @@ export function EnglishStage({
           onLaunchSkyRun();
         }}
         onContinue={handleContinueAfterFlightReward}
+      />
+
+      <QuizGameOverModal
+        open={isGameOver && !externalLocked}
+        mascot={profile.mascot}
+        equippedWardrobe={profile.equippedWardrobe}
+        reason={gameOverReason}
+        correctCount={setStars}
+        totalRounds={TOTAL_ROUNDS}
+        language={language}
+        onTryAgain={handleRestartSet}
+        onExit={() => {
+          soundEngine.clearScheduled();
+          stopSpeaking();
+          onBackToCategory();
+        }}
       />
 
       <ConfirmCloseDialog
