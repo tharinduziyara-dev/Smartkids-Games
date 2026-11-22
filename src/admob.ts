@@ -1,23 +1,49 @@
-import { AdMob, BannerAdSize, BannerAdPosition, BannerAdOptions } from '@capacitor-community/admob';
+import { AdMob, RewardAdOptions, RewardAdPluginEvents } from '@capacitor-community/admob';
 
 export async function initKidsAdMob() {
   try {
     await AdMob.initialize({
-      initializeForTesting: false,
+      initializeForTesting: true,
       tagForChildDirectedTreatment: true,
       maxAdContentRating: 'G',
     });
-
-    const options: BannerAdOptions = {
-      adId: 'ca-app-pub-7219225410567354/1650686995',
-      adSize: BannerAdSize.BANNER,
-      position: BannerAdPosition.BOTTOM_CENTER,
-      margin: 0,
-      isTesting: false,
-    };
-
-    await AdMob.showBanner(options);
   } catch (e) {
-    console.log('AdMob web mode or error:', e);
+    console.log('AdMob init web mode or error:', e);
   }
+}
+
+export async function showCharacterRewardAd(): Promise<boolean> {
+  return new Promise(async (resolve) => {
+    try {
+      let rewarded = false;
+
+      const rewardListener = await AdMob.addListener(
+        RewardAdPluginEvents.Rewarded,
+        () => {
+          rewarded = true;
+        }
+      );
+
+      const dismissListener = await AdMob.addListener(
+        RewardAdPluginEvents.Dismissed,
+        () => {
+          rewardListener.remove();
+          dismissListener.remove();
+          resolve(rewarded);
+        }
+      );
+
+      const options: RewardAdOptions = {
+        // Google Official Test Rewarded Ad ID (Replace with your real Rewarded Ad ID for Production):
+        adId: 'ca-app-pub-3940256099942544/5224354917',
+        isTesting: true,
+      };
+
+      await AdMob.prepareRewardVideoAd(options);
+      await AdMob.showRewardVideoAd();
+    } catch (e) {
+      console.log('Reward Ad error or web fallback:', e);
+      resolve(false);
+    }
+  });
 }
