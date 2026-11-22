@@ -53,6 +53,18 @@ export async function initializeAdMob(): Promise<boolean> {
 }
 
 /**
+ * Entry-point initializer used by src/main.tsx.
+ * Safely memoized with initializeAdMob() and preloads the test rewarded ad.
+ */
+export async function initKidsAdMob(): Promise<boolean> {
+  const initialized = await initializeAdMob();
+  if (initialized) {
+    void prepareRewardedAd();
+  }
+  return initialized;
+}
+
+/**
  * Preloads a Google Test Rewarded Ad (`isTesting: true`).
  */
 export async function prepareRewardedAd(): Promise<boolean> {
