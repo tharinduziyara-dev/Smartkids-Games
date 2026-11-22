@@ -9,7 +9,7 @@ export type TapTrick = 'none' | 'spin' | 'wink' | 'magic';
 interface MusicalOwlProps {
   mood: MascotMood;
   message?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'avatar' | 'sm' | 'md' | 'lg' | 'xl';
   streak?: number;
   interactive?: boolean;
   enableFullScreenFly?: boolean;
@@ -437,10 +437,14 @@ export function MusicalOwl({
   const isWinking = trick === 'wink';
 
   const dimensions =
-    size === 'sm'
+    size === 'avatar'
+      ? 'w-9 h-9'
+      : size === 'sm'
       ? 'w-24 h-24 sm:w-28 sm:h-28'
       : size === 'lg'
       ? 'w-32 h-32 sm:w-40 sm:h-40'
+      : size === 'xl'
+      ? 'w-[196px] h-[196px] sm:w-[248px] sm:h-[248px]'
       : 'w-28 h-28 sm:w-36 sm:h-36';
 
   const handleClick = () => {

@@ -1,7 +1,9 @@
 import {
   AppCategory,
   DEFAULT_EQUIPPED_WARDROBE,
+  DEFAULT_UNLOCKED_CHARACTERS,
   DifficultyLevel,
+  MASCOT_BY_ID,
   MascotId,
   PlayerProfile,
   REWARDS_CATALOG,
@@ -19,20 +21,36 @@ export interface ProfilesStore {
   activeProfileId: string;
 }
 
+const VALID_WARDROBE_IDS = new Set(WARDROBE_CATALOG.map((item) => item.id));
+
+/**
+ * Wardrobe now keeps the 4 starter items unlocked by default and unlocks the
+ * remaining 10 items permanently via Rewarded Ads (never auto-unlocked by stars).
+ */
 export function getUnlockedIdsForStars(
-  stars: number,
+  _stars: number,
   existingUnlocked: string[] = []
 ): string[] {
-  const unlockedSet = new Set<string>([
-    ...STARTER_UNLOCKED_ITEMS,
-    ...existingUnlocked,
-  ]);
-  for (const item of WARDROBE_CATALOG) {
-    if (stars >= item.unlockStars) {
-      unlockedSet.add(item.id);
+  const unlockedSet = new Set<string>(STARTER_UNLOCKED_ITEMS);
+  for (const id of existingUnlocked) {
+    if (VALID_WARDROBE_IDS.has(id)) {
+      unlockedSet.add(id);
     }
   }
   return Array.from(unlockedSet);
+}
+
+const DEFAULT_CHAR_SET = new Set<MascotId>(DEFAULT_UNLOCKED_CHARACTERS);
+
+/**
+ * Only the 2 default free starter characters (Ollie Owl & Sparkle Fairy)
+ * are persisted as unlocked in localStorage. Extra characters unlocked via
+ * Rewarded Ads live exclusively in React session memory.
+ */
+export function sanitizeUnlockedCharacters(
+  _existingCharacters: unknown = []
+): MascotId[] {
+  return [...DEFAULT_UNLOCKED_CHARACTERS];
 }
 
 export function getUnlockedRewardIds(
@@ -69,13 +87,11 @@ export function getUnlockedRewardIds(
 }
 
 export function findNewlyUnlockedItems(
-  prevUnlocked: string[],
-  newTotalStars: number
+  _prevUnlocked: string[],
+  _newTotalStars: number
 ): WardrobeItem[] {
-  const prevSet = new Set(prevUnlocked);
-  return WARDROBE_CATALOG.filter(
-    (item) => newTotalStars >= item.unlockStars && !prevSet.has(item.id)
-  );
+  // Wardrobe unlocks happen exclusively through Rewarded Ads
+  return [];
 }
 
 export function findNewlyUnlockedRewards(
@@ -88,18 +104,29 @@ export function findNewlyUnlockedRewards(
   );
 }
 
+function normalizePersistedMascotId(raw: unknown): MascotId {
+  if (typeof raw === 'string' && DEFAULT_CHAR_SET.has(raw as MascotId)) {
+    return raw as MascotId;
+  }
+  if (raw === 'runner_girl') return 'fairy';
+  return 'owl';
+}
+
 export function createPlayerProfile(
   name: string,
   mascot: MascotId = 'owl',
   initialStars = 0
 ): PlayerProfile {
   const cleanName = name.trim().slice(0, 20) || 'Player';
+  const safeMascot = normalizePersistedMascotId(mascot);
+  const unlockedChars = [...DEFAULT_UNLOCKED_CHARACTERS];
   return {
     id: `player_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     name: cleanName,
     totalStars: initialStars,
-    mascot,
-    unlockedItems: getUnlockedIdsForStars(initialStars),
+    mascot: safeMascot,
+    unlockedCharacters: unlockedChars,
+    unlockedItems: [...STARTER_UNLOCKED_ITEMS],
     unlockedRewards: getUnlockedRewardIds(initialStars),
     equippedWardrobe: { ...DEFAULT_EQUIPPED_WARDROBE },
     flightTurns: 0,
@@ -122,18 +149,17 @@ export function loadProfilesStore(): ProfilesStore {
           const safeProgress = Number.isFinite(p.flightTurnProgress)
             ? Math.min(4, Math.max(0, Math.floor(p.flightTurnProgress!)))
             : 0;
+          const safeMascot = normalizePersistedMascotId(p.mascot);
+          const unlockedChars = sanitizeUnlockedCharacters(p.unlockedCharacters);
+          const activeMascot = unlockedChars.includes(safeMascot) ? safeMascot : 'owl';
+
           return {
             ...p,
             id: String(p.id),
             name: String(p.name || 'Player').slice(0, 20),
             totalStars: safeStars,
-            mascot:
-              p.mascot === 'fairy' ||
-              p.mascot === 'runner_boy' ||
-              p.mascot === 'runner_girl' ||
-              p.mascot === 'owl'
-                ? p.mascot
-                : ('owl' as const),
+            mascot: activeMascot,
+            unlockedCharacters: unlockedChars,
             unlockedItems: getUnlockedIdsForStars(
               safeStars,
               Array.isArray(p.unlockedItems) ? p.unlockedItems : []
@@ -160,17 +186,29 @@ export function loadProfilesStore(): ProfilesStore {
 
     const legacyRaw = window.localStorage.getItem(LEGACY_STARS_KEY);
     const legacyStars = legacyRaw ? Math.max(0, parseInt(legacyRaw, 10) || 0) : 0;
-    const starter = createPlayerProfile('Melody Kid', 'owl', legacyStars);
+    const starter = createPlayerProfile('Smart Kid', 'owl', legacyStars);
     return { profiles: [starter], activeProfileId: starter.id };
   } catch {
-    const fallback = createPlayerProfile('Melody Kid', 'owl', 0);
+    const fallback = createPlayerProfile('Smart Kid', 'owl', 0);
     return { profiles: [fallback], activeProfileId: fallback.id };
   }
 }
 
 export function saveProfilesStore(store: ProfilesStore): void {
   try {
-    window.localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(store));
+    // Never persist Rewarded-Ad character unlocks or session-only characters to localStorage
+    const persistedStore: ProfilesStore = {
+      activeProfileId: store.activeProfileId,
+      profiles: store.profiles.map((p) => ({
+        ...p,
+        mascot: normalizePersistedMascotId(p.mascot),
+        unlockedCharacters: [...DEFAULT_UNLOCKED_CHARACTERS],
+      })),
+    };
+    window.localStorage.setItem(
+      PROFILES_STORAGE_KEY,
+      JSON.stringify(persistedStore)
+    );
   } catch {
     // Ignore storage quota errors
   }

@@ -85,12 +85,12 @@ export function FlightTurnRewardModal({
 
   return (
     <div
-      className="fixed inset-0 z-40 bg-slate-900/55 flex items-center justify-center p-4"
+      className="safe-modal-overlay fixed inset-0 z-40 bg-slate-900/55 flex items-center justify-center overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={st.rewardPopupTitle}
     >
-      <div className="clay-surface rounded-[34px] p-6 sm:p-8 w-full max-w-md border-2 border-white flex flex-col items-center gap-4 text-center shadow-2xl bg-gradient-to-b from-pink-50 via-white to-sky-50">
+      <div className="clay-surface rounded-[34px] p-6 sm:p-8 w-full max-w-md border-2 border-white flex flex-col items-center gap-4 text-center shadow-2xl bg-gradient-to-b from-pink-50 via-white to-sky-50 my-auto max-h-[90dvh] overflow-y-auto">
         <div className="flex items-center gap-1.5 text-pink-600 font-display text-sm font-bold">
           <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
           <span>5 / 5</span>
@@ -180,12 +180,12 @@ export function QuizGameOverModal({
 
   return (
     <div
-      className="fixed inset-0 z-40 bg-slate-900/60 flex items-center justify-center p-4"
+      className="safe-modal-overlay fixed inset-0 z-40 bg-slate-900/60 flex items-center justify-center overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={c.quizGameOverTitle}
     >
-      <div className="clay-surface rounded-[34px] p-6 sm:p-8 w-full max-w-md border-2 border-white flex flex-col items-center gap-4 text-center shadow-2xl bg-gradient-to-b from-rose-50 via-white to-amber-50">
+      <div className="clay-surface rounded-[34px] p-6 sm:p-8 w-full max-w-md border-2 border-white flex flex-col items-center gap-4 text-center shadow-2xl bg-gradient-to-b from-rose-50 via-white to-amber-50 my-auto max-h-[90dvh] overflow-y-auto">
         <div className="flex items-center gap-2 text-rose-600 font-display text-sm font-bold">
           <XCircle className="w-5 h-5 shrink-0" />
           <span className="tabular-nums">{c.scoreBeforeLoss(correctCount, totalRounds)}</span>

@@ -41,6 +41,7 @@ export const TEXT: Record<
     appTagline: string;
     header: {
       categories: string;
+      backShort: string;
       switchPlayer: string;
       dictionary: string;
       myRewards: string;
@@ -64,6 +65,14 @@ export const TEXT: Record<
     };
     home: {
       wardrobeBtn: string;
+      startBtn: string;
+      watchVideoUnlock: string;
+      changeCharacterBtn: string;
+      lockedLabel: string;
+      unlockedLabel: string;
+      chooseCharacterHint: string;
+      sinhalaTitle: string;
+      sinhalaSubtitle: string;
       footerHint: string;
       welcomeMsg: (name: string) => string;
       categoryMsg: Record<AppCategory, (name: string) => string>;
@@ -73,6 +82,19 @@ export const TEXT: Record<
         AppCategory,
         { title: string; subtitle: string; cta: string }
       >;
+    };
+    rewardedAd: {
+      badge: string;
+      unlockingTitle: (itemTitle: string) => string;
+      watchingHint: string;
+      secondsRemaining: (secs: number) => string;
+      readyToUnlock: string;
+      claimBtn: string;
+      skipBtn: string;
+      skipWarning: string;
+      adHeadline: string;
+      adBody: string;
+      loadingAd: string;
     };
     mascots: Record<MascotId, { name: string; shortLabel: string }>;
     levels: Record<DifficultyLevel, { label: string; summary: string }>;
@@ -232,6 +254,7 @@ export const TEXT: Record<
       categories: Record<WardrobeCategory, string>;
       equipped: string;
       tapToWear: string;
+      watchVideoUnlock: string;
       unlockAtStars: (stars: number) => string;
       done: string;
       items: Record<string, string>;
@@ -316,6 +339,7 @@ export const TEXT: Record<
     appTagline: 'Learn Music, Math, English & Sinhala',
     header: {
       categories: 'Categories',
+      backShort: 'Back',
       switchPlayer: 'Switch',
       dictionary: 'Dictionary',
       myRewards: 'My Rewards',
@@ -339,9 +363,17 @@ export const TEXT: Record<
     },
     home: {
       wardrobeBtn: 'Wardrobe',
+      startBtn: 'START',
+      watchVideoUnlock: 'Watch Video to Unlock',
+      changeCharacterBtn: 'Change Character',
+      lockedLabel: 'Locked',
+      unlockedLabel: 'Unlocked',
+      chooseCharacterHint: 'Swipe or tap < > to pick your friend!',
+      sinhalaTitle: 'Sinhala',
+      sinhalaSubtitle: 'Picture Dictionary & Words',
       footerHint:
-        'Tap your mascot for tricks · Earn stars to unlock My Rewards & Fairy outfits',
-      welcomeMsg: (name) => `Hi ${name}! Pick Music, Math, or English!`,
+        'Tap your mascot for tricks · Unlock characters & outfits with Rewarded Videos',
+      welcomeMsg: (name) => `Hi ${name}! Pick Music, Math, English, or Sinhala!`,
       categoryMsg: {
         music: (name) => `Let’s play Music, ${name}!`,
         math: (name) => `Ready for Math puzzles, ${name}?`,
@@ -350,8 +382,14 @@ export const TEXT: Record<
       tapMsg: {
         owl: 'Hoo-hoo! You’ve got this!',
         fairy: 'Sparkle magic! Let’s learn & play!',
-        runner_boy: 'On your marks! Ready to jump & learn!',
-        runner_girl: 'Go Maya! Let’s race through today’s puzzles!',
+        bunny: 'Hop, hop, hooray! Carrot power!',
+        watch_hero: 'It’s hero time! Ready for action!',
+        giant: 'Big friendly high-five! Let’s learn!',
+        unicorn: 'Rainbow wishes! Believe in magic!',
+        dino: 'Roar-some! Let’s stomp through puzzles!',
+        astronaut: '3, 2, 1… Blast off to learning!',
+        panda: 'Bamboo crunch! You’re super smart!',
+        superhero: 'Up, up, and away! Hero mode on!',
       },
       studioTitles: {
         music: { first: 'Music', accent: 'Studio' },
@@ -361,29 +399,45 @@ export const TEXT: Record<
       categories: {
         music: {
           title: 'Music',
-          subtitle:
-            'Ear training with Marimba & Piano: Guess the Note, Copy the Melody, High or Low, and Chords.',
-          cta: 'Explore Music',
+          subtitle: 'Notes, melodies & chords',
+          cta: 'Play Music',
         },
         math: {
           title: 'Math',
-          subtitle:
-            'Interactive Addition (+), Subtraction (−), Multiplication (×), and Division (÷) challenges.',
-          cta: 'Explore Math',
+          subtitle: '+ − × ÷ Puzzles',
+          cta: 'Play Math',
         },
         english: {
           title: 'English',
-          subtitle:
-            'Listen & spell with Dictation, Name the Picture, and Match the Word picture cards.',
-          cta: 'Explore English',
+          subtitle: 'Spelling & picture words',
+          cta: 'Play English',
         },
       },
     },
+    rewardedAd: {
+      badge: 'Reward Video',
+      unlockingTitle: (itemTitle) => `Unlocking ${itemTitle}`,
+      watchingHint: 'Watch this short clip to unlock!',
+      secondsRemaining: (secs) => `Unlocking in ${secs}s...`,
+      readyToUnlock: 'Reward Ready!',
+      claimBtn: 'Claim & Unlock Now!',
+      skipBtn: 'Cancel',
+      skipWarning: 'Close now? You will miss unlocking this reward.',
+      adHeadline: 'SmartKids Creativity Club',
+      adBody: 'Discover fun music, math quests, and magical 3D sky adventures every day!',
+      loadingAd: 'Loading reward video...',
+    },
     mascots: {
-      owl: { name: 'Ollie the Owl', shortLabel: 'Ollie Owl' },
-      fairy: { name: 'Sparkle the Fairy', shortLabel: 'Sparkle Fairy' },
-      runner_boy: { name: 'Leo the Runner', shortLabel: 'Leo (Boy)' },
-      runner_girl: { name: 'Maya the Runner', shortLabel: 'Maya (Girl)' },
+      owl: { name: 'Ollie Owl', shortLabel: 'Ollie Owl' },
+      fairy: { name: 'Sparkle Fairy', shortLabel: 'Sparkle Fairy' },
+      bunny: { name: 'Cute Bunny', shortLabel: 'Cute Bunny' },
+      watch_hero: { name: 'Sci-Fi Watch Hero', shortLabel: 'Watch Hero' },
+      giant: { name: 'Friendly Giant', shortLabel: 'Friendly Giant' },
+      unicorn: { name: 'Magical Unicorn', shortLabel: 'Unicorn' },
+      dino: { name: 'Baby Dinosaur', shortLabel: 'Baby Dino' },
+      astronaut: { name: 'Little Astronaut', shortLabel: 'Astronaut' },
+      panda: { name: 'Cute Panda', shortLabel: 'Cute Panda' },
+      superhero: { name: 'Mini Superhero', shortLabel: 'Superhero' },
     },
     levels: {
       beginner: {
@@ -741,6 +795,7 @@ export const TEXT: Record<
       },
       equipped: 'Equipped',
       tapToWear: 'Tap to wear',
+      watchVideoUnlock: 'Watch Video to Unlock',
       unlockAtStars: (stars) => `Unlock at ${stars} Stars`,
       done: 'Done Dressing Up',
       items: {
@@ -845,6 +900,7 @@ export const TEXT: Record<
     appTagline: 'සංගීතය, ගණිතය, ඉංග්‍රීසි සහ සිංහල ඉගෙන ගමු',
     header: {
       categories: 'විෂයන්',
+      backShort: 'ආපසු',
       switchPlayer: 'මාරු කරන්න',
       dictionary: 'ශබ්දකෝෂය',
       myRewards: 'මගේ තෑගි',
@@ -868,9 +924,17 @@ export const TEXT: Record<
     },
     home: {
       wardrobeBtn: 'ඇඳුම් පෙට්ටිය',
+      startBtn: 'අරඹන්න (START)',
+      watchVideoUnlock: 'වීඩියෝ බලා අගුළු අරින්න',
+      changeCharacterBtn: 'චරිතය මාරු කරන්න',
+      lockedLabel: 'අගුළු දමා ඇත',
+      unlockedLabel: 'විවෘතයි',
+      chooseCharacterHint: 'ඔබේ මිතුරා තෝරන්න!',
+      sinhalaTitle: 'සිංහල',
+      sinhalaSubtitle: 'පින්තූර ශබ්දකෝෂය',
       footerHint:
-        'විනෝද දස්කම් බලන්න චරිතය ඔබන්න · තරු එකතු කර තෑගි සහ ඇඳුම් අගුළු අරින්න',
-      welcomeMsg: (name) => `ආයුබෝවන් ${name}! සංගීතය, ගණිතය හෝ ඉංග්‍රීසි තෝරන්න!`,
+        'විනෝද දස්කම් බලන්න චරිතය ඔබන්න · වීඩියෝ බලා නව චරිත හා ඇඳුම් අගුළු අරින්න',
+      welcomeMsg: (name) => `ආයුබෝවන් ${name}! සංගීතය, ගණිතය, ඉංග්‍රීසි හෝ සිංහල තෝරන්න!`,
       categoryMsg: {
         music: (name) => `අපි සංගීතය සෙල්ලම් කරමු, ${name}!`,
         math: (name) => `ගණිත ප්‍රහේලිකා විසඳන්න සූදානම්ද, ${name}?`,
@@ -879,8 +943,14 @@ export const TEXT: Record<
       tapMsg: {
         owl: 'හූ-හූ! ඔබට පුළුවන්!',
         fairy: 'මැජික් දීප්තිය! අපි සෙල්ලම් කරමු!',
-        runner_boy: 'සූදානම්! අපි පැනලා ඉගෙන ගමු!',
-        runner_girl: 'දුවමු මායා! අද ප්‍රහේලිකා ජයගමු!',
+        bunny: 'පැන පැන ඉගෙන ගමු! කැරට් බලය!',
+        watch_hero: 'වීර වෙලාව! විශ්ව ඔරලෝසු බලය!',
+        giant: 'මිතුරු හයි-ෆයිව්! අපි ඉගෙන ගමු!',
+        unicorn: 'දේදුනු මැජික්! සිහින සැබෑ කරගමු!',
+        dino: 'රෝර්! අපි ගණන් හා වචන ජයගමු!',
+        astronaut: '3, 2, 1… අභ්‍යවකාශ චාරිකාව අරඹමු!',
+        panda: 'බට කොළ රසයි! ඔබ හරිම දක්ෂයි!',
+        superhero: 'සුපිරි වීර බලය! ඉහළටම යමු!',
       },
       studioTitles: {
         music: { first: 'සංගීත', accent: 'මැදිරිය' },
@@ -890,29 +960,45 @@ export const TEXT: Record<
       categories: {
         music: {
           title: 'සංගීතය',
-          subtitle:
-            'මැරිම්බා සහ පියානෝ සමඟ සවන්දීමේ පුහුණුව: ස්වරය, තාලය, උස් පහත් හා කෝඩ් හඳුනාගන්න.',
+          subtitle: 'ස්වර, තාල සහ කෝඩ්',
           cta: 'සංගීතයට යන්න',
         },
         math: {
           title: 'ගණිතය',
-          subtitle:
-            'එකතු කිරීම (+), අඩු කිරීම (−), ගුණ කිරීම (×) සහ බෙදීම (÷) ක්‍රීඩා.',
+          subtitle: '+ − × ÷ ගැටලු',
           cta: 'ගණිතයට යන්න',
         },
         english: {
           title: 'ඉංග්‍රීසි',
-          subtitle:
-            'අසා ලිවීම, පින්තූරය නම් කිරීම සහ වචන ගැලපීමෙන් ඉංග්‍රීසි ඉගෙන ගන්න.',
+          subtitle: 'අක්ෂර හා වචන',
           cta: 'ඉංග්‍රීසියට යන්න',
         },
       },
     },
+    rewardedAd: {
+      badge: 'තෑගි වීඩියෝව',
+      unlockingTitle: (itemTitle) => `${itemTitle} අගුළු අරිමින්`,
+      watchingHint: 'අගුළු ඇරීමට මෙම කෙටි වීඩියෝව බලන්න!',
+      secondsRemaining: (secs) => `තත්පර ${secs}කින් අගුළු ඇරේ...`,
+      readyToUnlock: 'තෑග්ග සූදානම්!',
+      claimBtn: 'දැන් ලබාගෙන අගුළු අරින්න!',
+      skipBtn: 'නවතන්න',
+      skipWarning: 'දැන් වැසුවහොත් මෙම තෑග්ග නොලැබේ.',
+      adHeadline: 'SmartKids නිර්මාණ සමාජය',
+      adBody: 'සංගීතය, ගණිතය, ඉංග්‍රීසි සහ 3D අහස් වික්‍රම සමඟ දිනපතා විනෝදයෙන් ඉගෙන ගන්න!',
+      loadingAd: 'තෑගි වීඩියෝව පූරණය වෙමින්...',
+    },
     mascots: {
       owl: { name: 'ඔලී බකමූණා', shortLabel: 'ඔලී බකමූණා' },
       fairy: { name: 'ස්පාර්ක්ල් සුරංගනාවි', shortLabel: 'සුරංගනාවි' },
-      runner_boy: { name: 'ලියෝ (පිරිමි)', shortLabel: 'ලියෝ' },
-      runner_girl: { name: 'මායා (ගැහැණු)', shortLabel: 'මායා' },
+      bunny: { name: 'හුරතල් හාවා', shortLabel: 'හුරතල් හාවා' },
+      watch_hero: { name: 'විශ්ව ඔරලෝසු වීරයා', shortLabel: 'ඔරලෝසු වීරයා' },
+      giant: { name: 'මිතුරු යෝධයා', shortLabel: 'මිතුරු යෝධයා' },
+      unicorn: { name: 'මැජික් යුනිකෝන්', shortLabel: 'යුනිකෝන්' },
+      dino: { name: 'පැංචි ඩයිනෝසර්', shortLabel: 'බේබි ඩයිනෝ' },
+      astronaut: { name: 'පුංචි ගගනගාමියා', shortLabel: 'ගගනගාමියා' },
+      panda: { name: 'හුරතල් පැන්ඩා', shortLabel: 'හුරතල් පැන්ඩා' },
+      superhero: { name: 'පුංචි සුපිරි වීරයා', shortLabel: 'සුපිරි වීරයා' },
     },
     levels: {
       beginner: {
@@ -1271,6 +1357,7 @@ export const TEXT: Record<
       },
       equipped: 'පැළඳ ඇත',
       tapToWear: 'පැළඳීමට ඔබන්න',
+      watchVideoUnlock: 'වීඩියෝ බලා අගුළු අරින්න',
       unlockAtStars: (stars) => `තරු ${stars}න් අගුළු අරින්න`,
       done: 'සැරසී අවසන්',
       items: {

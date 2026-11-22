@@ -1,13 +1,13 @@
 import { EquippedWardrobe, MascotId, MascotMood } from '../types/game';
 import { MusicalOwl } from './MusicalOwl';
 import { MusicalFairy } from './MusicalFairy';
-import { RunnerKid } from './RunnerKid';
+import { ExtraCharacterId, MascotCharacter } from './MascotCharacters';
 
 interface MascotStageProps {
   mascot: MascotId;
   mood: MascotMood;
   message?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'avatar' | 'sm' | 'md' | 'lg' | 'xl';
   streak?: number;
   equipped?: EquippedWardrobe;
   interactive?: boolean;
@@ -43,29 +43,28 @@ export function MascotStage({
     );
   }
 
-  if (mascot === 'runner_boy' || mascot === 'runner_girl') {
+  if (mascot === 'owl') {
     return (
-      <RunnerKid
-        gender={mascot === 'runner_boy' ? 'boy' : 'girl'}
+      <MusicalOwl
         mood={mood}
         message={message}
         size={size}
         streak={streak}
         interactive={interactive}
-        trackMode={isGameplay}
+        enableFullScreenFly={isGameplay}
         onTap={onTap}
       />
     );
   }
 
   return (
-    <MusicalOwl
+    <MascotCharacter
+      characterId={mascot as ExtraCharacterId}
       mood={mood}
       message={message}
       size={size}
       streak={streak}
       interactive={interactive}
-      enableFullScreenFly={isGameplay}
       onTap={onTap}
     />
   );

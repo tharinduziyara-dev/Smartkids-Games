@@ -316,10 +316,10 @@ export function MathStage({
   const activeHint = language === 'si' ? problem.hintSi : problem.hint;
 
   return (
-    <div className="min-h-dvh w-full flex flex-col justify-between px-3 py-3 sm:px-6 sm:py-5 max-w-5xl mx-auto relative">
+    <div className="safe-screen h-dvh max-h-dvh overflow-hidden w-full flex flex-col gap-1.5 max-w-5xl mx-auto relative">
       {/* Top HUD Bar */}
-      <header className="flex items-center justify-between gap-2 sm:gap-4">
-        <div className="flex items-center gap-2 sm:gap-3">
+      <header className="app-header-bar">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <button
             type="button"
             onClick={() => {
@@ -333,25 +333,25 @@ export function MathStage({
             }}
             aria-label="Back to Math modes"
             style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
-            className="toy-btn w-11 h-11 rounded-2xl bg-white text-slate-700 flex items-center justify-center border-2 border-slate-200 cursor-pointer"
+            className="toy-btn w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white text-slate-700 flex items-center justify-center border-2 border-slate-200 cursor-pointer shrink-0"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
-          <div className="flex flex-col">
-            <h1 className="font-display text-lg sm:text-2xl font-bold text-slate-900 leading-tight">
+          <div className="flex flex-col min-w-0 flex-1">
+            <h1 className="font-display text-base sm:text-2xl font-bold text-slate-900 leading-tight truncate">
               {t.math.stageTitles[mode]}
             </h1>
-            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-slate-500 tabular-nums">
-              <span className="truncate max-w-[90px] sm:max-w-none">{profile.name}</span>
+            <div className="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-sm font-semibold text-slate-500 tabular-nums truncate">
+              <span className="hidden sm:inline truncate">{profile.name}</span>
+              <span className="hidden sm:inline" aria-hidden="true">·</span>
+              <span className="truncate">{t.levels[level].label}</span>
               <span aria-hidden="true">·</span>
-              <span>{t.levels[level].label}</span>
-              <span aria-hidden="true">·</span>
-              <span>
+              <span className="shrink-0">
                 {t.common.round} {round}/{TOTAL_ROUNDS}
               </span>
-              <span aria-hidden="true">·</span>
-              <span>
+              <span className="hidden sm:inline" aria-hidden="true">·</span>
+              <span className="hidden sm:inline shrink-0">
                 {t.common.streak} {streak}
               </span>
             </div>
@@ -359,10 +359,10 @@ export function MathStage({
         </div>
 
         {/* Right HUD Cluster */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5">
-          <div className="flex items-center gap-1 px-1.5 sm:px-2.5 py-1.5 text-slate-800">
-            <Star className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 fill-amber-400 shrink-0" />
-            <span className="font-display text-lg sm:text-xl font-bold tabular-nums">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 py-1 text-slate-800 shrink-0">
+            <Star className="w-4 h-4 sm:w-6 sm:h-6 text-amber-500 fill-amber-400 shrink-0" />
+            <span className="font-display text-sm sm:text-xl font-bold tabular-nums">
               {profile.totalStars}
             </span>
           </div>
@@ -378,9 +378,9 @@ export function MathStage({
               background: 'linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)',
               boxShadow: '0 4px 0 0 #B45309',
             }}
-            className="toy-btn h-11 px-3 rounded-2xl text-amber-950 font-display text-xs sm:text-sm font-bold flex items-center gap-1.5 border-2 border-white/60 cursor-pointer"
+            className="toy-btn w-9 h-9 md:w-auto md:h-11 md:px-3 rounded-xl sm:rounded-2xl text-amber-950 font-display text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 border-2 border-white/60 cursor-pointer shrink-0"
           >
-            <Trophy className="w-4 h-4" />
+            <Trophy className="w-4 h-4 shrink-0" />
             <span className="hidden md:inline">{t.header.rewardsShort}</span>
           </button>
 
@@ -389,11 +389,11 @@ export function MathStage({
             onClick={onToggleMute}
             aria-label={muted ? t.header.unmute : t.header.mute}
             style={{ boxShadow: muted ? '0 4px 0 0 #CBD5E1' : '0 4px 0 0 #0284C7' }}
-            className={`toy-btn w-11 h-11 rounded-2xl flex items-center justify-center border-2 border-white cursor-pointer ${
+            className={`toy-btn w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center border-2 border-white cursor-pointer shrink-0 ${
               muted ? 'bg-slate-200 text-slate-600' : 'bg-sky-400 text-white'
             }`}
           >
-            {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            {muted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
           </button>
 
           <button
@@ -404,15 +404,15 @@ export function MathStage({
             }}
             aria-label="Pause game"
             style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
-            className="toy-btn w-11 h-11 rounded-2xl bg-white text-slate-700 flex items-center justify-center border-2 border-slate-200 cursor-pointer"
+            className="toy-btn w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white text-slate-700 flex items-center justify-center border-2 border-slate-200 cursor-pointer shrink-0"
           >
-            <Pause className="w-5 h-5" />
+            <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       </header>
 
       {/* Round Progress Stars Strip + 3D Flight Turn Counter */}
-      <div className="flex flex-col items-center gap-1.5 my-2">
+      <div className="shrink-0 flex flex-col items-center gap-1.5 py-1">
         <div className="flex items-center justify-center gap-2">
           {Array.from({ length: TOTAL_ROUNDS }).map((_, i) => {
             const filled = i < setStars;
@@ -420,7 +420,7 @@ export function MathStage({
             return (
               <div
                 key={i}
-                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-transform ${
+                className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-transform ${
                   filled
                     ? 'bg-amber-400 text-white shadow-[0_3px_0_0_#D97706] scale-105'
                     : isCurrent
@@ -428,7 +428,7 @@ export function MathStage({
                     : 'bg-white/70 border border-slate-200 text-slate-300'
                 }`}
               >
-                <Star className={`w-4 h-4 sm:w-5 sm:h-5 ${filled ? 'fill-white' : ''}`} />
+                <Star className={`w-3.5 h-3.5 sm:w-5 sm:h-5 ${filled ? 'fill-white' : ''}`} />
               </div>
             );
           })}
@@ -440,14 +440,15 @@ export function MathStage({
         />
       </div>
 
-      {/* Main Play Area */}
-      <main className="flex-1 flex flex-col items-center justify-center gap-4 sm:gap-5 py-2">
-        {unlockNotice && (
-          <div className="clay-card rounded-2xl px-4 py-2 border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-pink-50 text-amber-950 font-display text-sm sm:text-base font-bold flex items-center gap-2 shadow-md">
-            <Sparkles className="w-5 h-5 text-amber-500 shrink-0" />
-            <span>{unlockNotice}</span>
-          </div>
-        )}
+      {/* Main Play Area (Cleanly underneath header) */}
+      <main className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+        <div className="w-full my-auto flex flex-col items-center gap-4 sm:gap-5 py-2">
+          {unlockNotice && (
+            <div className="clay-card rounded-2xl px-4 py-2 border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-pink-50 text-amber-950 font-display text-sm sm:text-base font-bold flex items-center gap-2 shadow-md">
+              <Sparkles className="w-5 h-5 text-amber-500 shrink-0" />
+              <span>{unlockNotice}</span>
+            </div>
+          )}
 
         <MascotStage
           mascot={profile.mascot}
@@ -581,9 +582,10 @@ export function MathStage({
             </div>
           </div>
         )}
+        </div>
       </main>
 
-      <footer className="text-center pt-1">
+      <footer className="shrink-0 text-center pt-1">
         <p className="text-xs font-medium text-slate-400">
           {useKeypad ? t.math.footerKeypad : t.math.footerChoices}
         </p>
@@ -592,12 +594,12 @@ export function MathStage({
       {/* Pause Modal */}
       {isPaused && !isVictory && !isGameOver && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/45 flex items-center justify-center p-4"
+          className="safe-modal-overlay fixed inset-0 z-40 bg-slate-900/45 flex items-center justify-center overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-label={t.common.pausedTitle}
         >
-          <div className="clay-surface rounded-[32px] p-6 sm:p-8 w-full max-w-sm border-2 border-white flex flex-col items-center gap-4 text-center">
+          <div className="clay-surface rounded-[32px] p-6 sm:p-8 w-full max-w-sm border-2 border-white flex flex-col items-center gap-4 text-center my-auto max-h-[90dvh] overflow-y-auto">
             <h2 className="font-display text-3xl font-bold text-slate-900">
               {t.common.pausedTitle}
             </h2>
@@ -701,12 +703,12 @@ export function MathStage({
       {/* Victory Modal */}
       {isVictory && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/50 flex items-center justify-center p-4"
+          className="safe-modal-overlay fixed inset-0 z-40 bg-slate-900/50 flex items-center justify-center overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-label="Math Set Complete"
         >
-          <div className="clay-surface rounded-[34px] p-6 sm:p-8 w-full max-w-md border-2 border-white flex flex-col items-center gap-4 text-center">
+          <div className="clay-surface rounded-[34px] p-6 sm:p-8 w-full max-w-md border-2 border-white flex flex-col items-center gap-4 text-center my-auto max-h-[90dvh] overflow-y-auto">
             <MascotStage
               mascot={profile.mascot}
               mood="celebrating"

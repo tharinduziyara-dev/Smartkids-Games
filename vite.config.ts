@@ -10,6 +10,49 @@ export default defineConfig(() => {
     plugins: [
       react(),
       tailwindcss(),
+      // Prevents stale cached dev HTML or Vite PWA dev hooks from calling import.meta.hot.send
+      // when HMR is disabled (DISABLE_HMR=true), while keeping production PWA builds intact.
+      {
+        name: 'safe-dev-pwa-guard',
+        apply: 'serve',
+        enforce: 'pre',
+        resolveId(id: string) {
+          if (id === '/@vite-plugin-pwa/pwa-entry-point-loaded') {
+            return '\0safe-dev-pwa-entry';
+          }
+        },
+        load(id: string) {
+          if (id === '\0safe-dev-pwa-entry') {
+            return `export default function registerDevSW() {
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      for (const reg of regs) {
+        reg.unregister().catch(() => {});
+      }
+    }).catch(() => {});
+  }
+}`;
+          }
+        },
+        configureServer(server) {
+          server.middlewares.use((req, res, next) => {
+            const url = req.url?.split('?')[0];
+            if (url === '/dev-sw.js' || url === '/sw.js') {
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+              res.setHeader('Cache-Control', 'no-store');
+              res.end(
+                `self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.registration.unregister().catch(() => {}));
+});`
+              );
+              return;
+            }
+            next();
+          });
+        },
+      },
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: [

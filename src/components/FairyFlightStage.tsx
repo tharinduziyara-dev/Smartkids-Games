@@ -1395,165 +1395,166 @@ export function FairyFlightStage({
         </div>
       )}
 
-      {/* Clean Top HUD Bar (no backdrop-filter over WebGL) */}
-      <header className="relative z-20 flex items-center justify-between gap-2 px-3 py-3 sm:px-6 sm:py-4 pointer-events-none">
-        {/* Left: Exit / Pause + Mode Info */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <button
-            type="button"
-            onClick={handleRequestExit}
-            aria-label={st.exitFlight}
-            style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
-            className="toy-btn w-11 h-11 rounded-2xl bg-white/95 text-slate-700 flex items-center justify-center border-2 border-white cursor-pointer shrink-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-
-          {uiPhase !== 'GAME_OVER' && (
+      {/* Non-Overlapping Safe-Area HUD Column Overlay */}
+      <div className="safe-screen relative z-20 h-full w-full flex flex-col justify-between gap-2 pointer-events-none">
+        {/* Clean Top HUD Bar (no backdrop-filter over WebGL) */}
+        <header className="app-header-bar pointer-events-auto">
+          {/* Left: Exit / Pause + Mode Info */}
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <button
               type="button"
-              onClick={handlePauseToggle}
-              aria-label={uiPhase === 'PAUSED' ? st.resumeFlight : st.pauseTitle}
+              onClick={handleRequestExit}
+              aria-label={st.exitFlight}
               style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
-              className="toy-btn w-11 h-11 rounded-2xl bg-white/95 text-indigo-600 flex items-center justify-center border-2 border-white cursor-pointer shrink-0"
+              className="toy-btn w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white/95 text-slate-700 flex items-center justify-center border-2 border-white cursor-pointer shrink-0"
             >
-              {uiPhase === 'PAUSED' ? (
-                <Play className="w-5 h-5 fill-current" />
-              ) : (
-                <Pause className="w-5 h-5" />
-              )}
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
+
+            {uiPhase !== 'GAME_OVER' && (
+              <button
+                type="button"
+                onClick={handlePauseToggle}
+                aria-label={uiPhase === 'PAUSED' ? st.resumeFlight : st.pauseTitle}
+                style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
+                className="toy-btn w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white/95 text-indigo-600 flex items-center justify-center border-2 border-white cursor-pointer shrink-0"
+              >
+                {uiPhase === 'PAUSED' ? (
+                  <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
+                ) : (
+                  <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
+                )}
+              </button>
+            )}
+
+            <div className="hidden md:flex items-center gap-2 rounded-2xl bg-white/90 px-3.5 py-2 border-2 border-white shadow-sm min-w-0">
+              <Wand2 className="w-4 h-4 text-pink-500 shrink-0" />
+              <span className="font-display text-sm font-bold text-slate-800 whitespace-nowrap truncate">
+                {categoryLabel} · {levelLabel}
+              </span>
+            </div>
+          </div>
+
+          {/* Center: 2 Glowing Hearts */}
+          <div
+            className="flex items-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl bg-slate-900/75 px-2.5 sm:px-4 py-1.5 sm:py-2 border-2 border-white/40 shadow-md shrink-0"
+            aria-label={`Hearts: ${hearts} of 2`}
+          >
+            {[0, 1].map((idx) => {
+              const active = idx < hearts;
+              return (
+                <Heart
+                  key={idx}
+                  className={`w-5 h-5 sm:w-7 sm:h-7 transition-all duration-300 ${
+                    active
+                      ? 'text-rose-400 fill-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.85)] scale-105'
+                      : 'text-slate-500/70 fill-slate-700/40 scale-90'
+                  }`}
+                />
+              );
+            })}
+          </div>
+
+          {/* Right: Live Star Counter & Mute */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 rounded-xl sm:rounded-2xl bg-white/95 px-2.5 sm:px-3.5 py-1.5 sm:py-2 border-2 border-white shadow-sm">
+              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-400 shrink-0" />
+              <span className="font-display text-sm sm:text-xl font-bold text-slate-900 tabular-nums">
+                {starsEarned}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={onToggleMute}
+              aria-label={muted ? t.header.unmute : t.header.mute}
+              style={{
+                boxShadow: muted ? '0 4px 0 0 #CBD5E1' : '0 4px 0 0 #0284C7',
+              }}
+              className={`toy-btn w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center border-2 border-white cursor-pointer shrink-0 ${
+                muted ? 'bg-slate-200 text-slate-600' : 'bg-sky-400 text-white'
+              }`}
+            >
+              {muted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
+            </button>
+          </div>
+        </header>
+
+        {/* Middle Feedback Area (Cleanly below header, never overlapping) */}
+        <div className="flex-1 min-h-0 flex flex-col items-center justify-start pt-2 pointer-events-none">
+          {feedbackBanner && (uiPhase === 'BLASTING' || uiPhase === 'WRONG_SHAKE' || uiPhase === 'ORBIT_OUT') && (
+            <div
+              className={`rounded-2xl px-4 sm:px-5 py-2 sm:py-2.5 font-display text-sm sm:text-lg font-bold border-2 border-white shadow-lg text-center max-w-md ${
+                blastResultRef.current === 'correct'
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-rose-500 text-white'
+              }`}
+            >
+              {feedbackBanner}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom HUD / Question Modal Slot */}
+        <div className="shrink-0 w-full flex flex-col items-center pointer-events-none">
+          {uiPhase === 'FLYING' && (
+            <div className="rounded-2xl bg-slate-900/70 text-white px-4 py-2 text-xs sm:text-sm font-semibold text-center border border-white/25 shadow-md max-w-md">
+              {st.swipeHint}
+            </div>
           )}
 
-          <div className="hidden sm:flex items-center gap-2 rounded-2xl bg-white/90 px-3.5 py-2 border-2 border-white shadow-sm">
-            <Wand2 className="w-4 h-4 text-pink-500 shrink-0" />
-            <span className="font-display text-sm font-bold text-slate-800 whitespace-nowrap">
-              {categoryLabel} · {levelLabel}
-            </span>
-          </div>
-        </div>
+          {/* Upright Pop-Up Question Modal during 45° Side-Profile View */}
+          {uiPhase === 'QUESTION' && activeChallenge && (
+            <div
+              className="w-full flex justify-center pointer-events-none"
+              role="dialog"
+              aria-modal="true"
+              aria-label={st.obstacleBlocked}
+            >
+              <div className="clay-surface pointer-events-auto w-full max-w-xl rounded-[28px] p-4 sm:p-6 border-2 border-white shadow-2xl flex flex-col gap-3 bg-white/95 max-h-[68dvh] overflow-y-auto">
+                {/* Header */}
+                <div className="app-header-bar">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-display text-base sm:text-lg font-bold text-slate-900 leading-tight truncate">
+                        {activeChallenge.kind === 'math'
+                          ? st.mathTitle
+                          : activeChallenge.kind === 'english'
+                          ? st.englishTitle
+                          : activeChallenge.kind === 'music_note'
+                          ? st.musicNoteTitle
+                          : st.musicChordTitle}
+                      </h3>
+                      <p className="text-xs font-semibold text-slate-500 truncate">
+                        {st.obstacleBlocked}
+                      </p>
+                    </div>
+                  </div>
 
-        {/* Center: 2 Glowing Hearts */}
-        <div
-          className="flex items-center gap-2 rounded-2xl bg-slate-900/75 px-4 py-2 border-2 border-white/40 shadow-md pointer-events-auto"
-          aria-label={`Hearts: ${hearts} of 2`}
-        >
-          {[0, 1].map((idx) => {
-            const active = idx < hearts;
-            return (
-              <Heart
-                key={idx}
-                className={`w-6 h-6 sm:w-7 sm:h-7 transition-all duration-300 ${
-                  active
-                    ? 'text-rose-400 fill-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.85)] scale-105'
-                    : 'text-slate-500/70 fill-slate-700/40 scale-90'
-                }`}
-              />
-            );
-          })}
-        </div>
-
-        {/* Right: Live Star Counter & Mute */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="flex items-center gap-1.5 rounded-2xl bg-white/95 px-3.5 py-2 border-2 border-white shadow-sm">
-            <Star className="w-5 h-5 text-amber-500 fill-amber-400 shrink-0" />
-            <span className="font-display text-lg sm:text-xl font-bold text-slate-900 tabular-nums">
-              {starsEarned}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={onToggleMute}
-            aria-label={muted ? t.header.unmute : t.header.mute}
-            style={{
-              boxShadow: muted ? '0 4px 0 0 #CBD5E1' : '0 4px 0 0 #0284C7',
-            }}
-            className={`toy-btn w-11 h-11 rounded-2xl flex items-center justify-center border-2 border-white cursor-pointer shrink-0 ${
-              muted ? 'bg-slate-200 text-slate-600' : 'bg-sky-400 text-white'
-            }`}
-          >
-            {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-          </button>
-        </div>
-      </header>
-
-      {/* Subtle Bottom Swipe Control Hint during active flight */}
-      {uiPhase === 'FLYING' && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-4 w-full max-w-md flex justify-center">
-          <div className="rounded-2xl bg-slate-900/70 text-white px-4 py-2 text-xs sm:text-sm font-semibold text-center border border-white/25 shadow-md">
-            {st.swipeHint}
-          </div>
-        </div>
-      )}
-
-      {/* Blast / Oops Feedback Banner */}
-      {feedbackBanner && (uiPhase === 'BLASTING' || uiPhase === 'WRONG_SHAKE' || uiPhase === 'ORBIT_OUT') && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-          <div
-            className={`rounded-2xl px-5 py-2.5 font-display text-base sm:text-lg font-bold border-2 border-white shadow-lg ${
-              blastResultRef.current === 'correct'
-                ? 'bg-emerald-500 text-white'
-                : 'bg-rose-500 text-white'
-            }`}
-          >
-            {feedbackBanner}
-          </div>
-        </div>
-      )}
-
-      {/* Upright Pop-Up Question Modal during 45° Side-Profile View */}
-      {uiPhase === 'QUESTION' && activeChallenge && (
-        <div
-          className="fixed inset-x-0 bottom-3 sm:bottom-6 z-30 flex justify-center px-3 sm:px-5 pointer-events-none"
-          role="dialog"
-          aria-modal="true"
-          aria-label={st.obstacleBlocked}
-        >
-          <div className="clay-surface pointer-events-auto w-full max-w-xl rounded-[28px] p-4 sm:p-6 border-2 border-white shadow-2xl flex flex-col gap-3.5 bg-white/95">
-            {/* Header */}
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-5 h-5" />
+                  {(activeChallenge.kind === 'english' ||
+                    activeChallenge.kind === 'music_note' ||
+                    activeChallenge.kind === 'music_chord') && (
+                    <button
+                      type="button"
+                      onClick={() => playChallengeAudio(activeChallenge)}
+                      style={{
+                        background: 'linear-gradient(180deg, #38BDF8 0%, #0284C7 100%)',
+                        boxShadow: '0 4px 0 0 #075985',
+                      }}
+                      className="toy-btn min-h-[38px] px-3 py-1.5 rounded-xl text-white font-display text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-white/40 cursor-pointer shrink-0"
+                    >
+                      <Volume2 className="w-4 h-4 shrink-0" />
+                      <span>
+                        {activeChallenge.kind === 'english'
+                          ? st.hearWord
+                          : st.listenAgain}
+                      </span>
+                    </button>
+                  )}
                 </div>
-                <div>
-                  <h3 className="font-display text-base sm:text-lg font-bold text-slate-900 leading-tight">
-                    {activeChallenge.kind === 'math'
-                      ? st.mathTitle
-                      : activeChallenge.kind === 'english'
-                      ? st.englishTitle
-                      : activeChallenge.kind === 'music_note'
-                      ? st.musicNoteTitle
-                      : st.musicChordTitle}
-                  </h3>
-                  <p className="text-xs font-semibold text-slate-500">
-                    {st.obstacleBlocked}
-                  </p>
-                </div>
-              </div>
-
-              {(activeChallenge.kind === 'english' ||
-                activeChallenge.kind === 'music_note' ||
-                activeChallenge.kind === 'music_chord') && (
-                <button
-                  type="button"
-                  onClick={() => playChallengeAudio(activeChallenge)}
-                  style={{
-                    background: 'linear-gradient(180deg, #38BDF8 0%, #0284C7 100%)',
-                    boxShadow: '0 4px 0 0 #075985',
-                  }}
-                  className="toy-btn min-h-[40px] px-3.5 py-1.5 rounded-xl text-white font-display text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-white/40 cursor-pointer shrink-0"
-                >
-                  <Volume2 className="w-4 h-4" />
-                  <span>
-                    {activeChallenge.kind === 'english'
-                      ? st.hearWord
-                      : st.listenAgain}
-                  </span>
-                </button>
-              )}
-            </div>
 
             {/* Category-Specific Prompt Body */}
             {activeChallenge.kind === 'math' && (
@@ -1648,19 +1649,21 @@ export function FairyFlightStage({
                 </div>
               </>
             )}
+            </div>
           </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Pause Modal */}
       {uiPhase === 'PAUSED' && !confirmExit && !externalLocked && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/55 flex items-center justify-center p-4"
+          className="safe-modal-overlay fixed inset-0 z-40 bg-slate-900/55 flex items-center justify-center overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-label={st.pauseTitle}
         >
-          <div className="clay-surface rounded-[32px] p-6 sm:p-7 w-full max-w-sm border-2 border-white flex flex-col items-center gap-4 text-center shadow-2xl bg-white">
+          <div className="clay-surface rounded-[32px] p-6 sm:p-7 w-full max-w-sm border-2 border-white flex flex-col items-center gap-4 text-center shadow-2xl bg-white my-auto max-h-[90dvh] overflow-y-auto">
             <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
               <Pause className="w-7 h-7" />
             </div>
@@ -1699,12 +1702,12 @@ export function FairyFlightStage({
       {/* Game Over Modal */}
       {uiPhase === 'GAME_OVER' && !externalLocked && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/60 flex items-center justify-center p-4"
+          className="safe-modal-overlay fixed inset-0 z-40 bg-slate-900/60 flex items-center justify-center overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-label={st.gameOverTitle}
         >
-          <div className="clay-surface rounded-[34px] p-6 sm:p-8 w-full max-w-md border-2 border-white flex flex-col items-center gap-4 text-center shadow-2xl bg-white">
+          <div className="clay-surface rounded-[34px] p-6 sm:p-8 w-full max-w-md border-2 border-white flex flex-col items-center gap-4 text-center shadow-2xl bg-white my-auto max-h-[90dvh] overflow-y-auto">
             <div className="w-16 h-16 rounded-3xl bg-amber-100 text-amber-500 flex items-center justify-center border-2 border-amber-200 shadow-inner">
               <Star className="w-9 h-9 fill-amber-400 text-amber-500" />
             </div>

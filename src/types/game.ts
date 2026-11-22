@@ -12,7 +12,17 @@ export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced' | 'extrem
 
 export type InstrumentType = 'marimba' | 'piano';
 
-export type MascotId = 'owl' | 'fairy' | 'runner_boy' | 'runner_girl';
+export type MascotId =
+  | 'owl'
+  | 'fairy'
+  | 'bunny'
+  | 'watch_hero'
+  | 'giant'
+  | 'unicorn'
+  | 'dino'
+  | 'astronaut'
+  | 'panda'
+  | 'superhero';
 
 export interface MascotMeta {
   id: MascotId;
@@ -20,38 +30,95 @@ export interface MascotMeta {
   shortLabel: string;
   badgeColor: string;
   accentHex: string;
+  defaultUnlocked: boolean;
 }
 
 export const MASCOT_LIST: MascotMeta[] = [
   {
     id: 'owl',
-    name: 'Ollie the Owl',
+    name: 'Ollie Owl',
     shortLabel: 'Ollie Owl',
     badgeColor: 'bg-indigo-600',
     accentHex: '#4F46E5',
+    defaultUnlocked: true,
   },
   {
     id: 'fairy',
-    name: 'Sparkle the Fairy',
+    name: 'Sparkle Fairy',
     shortLabel: 'Sparkle Fairy',
     badgeColor: 'bg-pink-500',
     accentHex: '#EC4899',
+    defaultUnlocked: true,
   },
   {
-    id: 'runner_boy',
-    name: 'Leo the Runner',
-    shortLabel: 'Leo (Boy)',
-    badgeColor: 'bg-sky-500',
-    accentHex: '#0EA5E9',
+    id: 'bunny',
+    name: 'Cute Bunny',
+    shortLabel: 'Cute Bunny',
+    badgeColor: 'bg-rose-400',
+    accentHex: '#FB7185',
+    defaultUnlocked: false,
   },
   {
-    id: 'runner_girl',
-    name: 'Maya the Runner',
-    shortLabel: 'Maya (Girl)',
-    badgeColor: 'bg-emerald-500',
+    id: 'watch_hero',
+    name: 'Sci-Fi Watch Hero',
+    shortLabel: 'Watch Hero',
+    badgeColor: 'bg-emerald-600',
     accentHex: '#10B981',
+    defaultUnlocked: false,
+  },
+  {
+    id: 'giant',
+    name: 'Friendly Giant',
+    shortLabel: 'Friendly Giant',
+    badgeColor: 'bg-amber-600',
+    accentHex: '#D97706',
+    defaultUnlocked: false,
+  },
+  {
+    id: 'unicorn',
+    name: 'Magical Unicorn',
+    shortLabel: 'Unicorn',
+    badgeColor: 'bg-fuchsia-500',
+    accentHex: '#D946EF',
+    defaultUnlocked: false,
+  },
+  {
+    id: 'dino',
+    name: 'Baby Dinosaur',
+    shortLabel: 'Baby Dino',
+    badgeColor: 'bg-lime-600',
+    accentHex: '#65A30D',
+    defaultUnlocked: false,
+  },
+  {
+    id: 'astronaut',
+    name: 'Little Astronaut',
+    shortLabel: 'Astronaut',
+    badgeColor: 'bg-sky-600',
+    accentHex: '#0284C7',
+    defaultUnlocked: false,
+  },
+  {
+    id: 'panda',
+    name: 'Cute Panda',
+    shortLabel: 'Cute Panda',
+    badgeColor: 'bg-slate-700',
+    accentHex: '#334155',
+    defaultUnlocked: false,
+  },
+  {
+    id: 'superhero',
+    name: 'Mini Superhero',
+    shortLabel: 'Superhero',
+    badgeColor: 'bg-red-500',
+    accentHex: '#EF4444',
+    defaultUnlocked: false,
   },
 ];
+
+export const DEFAULT_UNLOCKED_CHARACTERS: MascotId[] = MASCOT_LIST.filter(
+  (m) => m.defaultUnlocked
+).map((m) => m.id);
 
 export const MASCOT_BY_ID: Record<MascotId, MascotMeta> = MASCOT_LIST.reduce(
   (acc, item) => {
@@ -384,6 +451,7 @@ export interface PlayerProfile {
   name: string;
   totalStars: number;
   mascot: MascotId;
+  unlockedCharacters: MascotId[];
   unlockedItems: string[];
   unlockedRewards: string[];
   equippedWardrobe: EquippedWardrobe;

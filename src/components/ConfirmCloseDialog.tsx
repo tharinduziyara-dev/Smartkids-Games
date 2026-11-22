@@ -37,13 +37,13 @@ export function ConfirmCloseDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[70] bg-slate-900/60 flex items-center justify-center p-4"
+      className="safe-modal-overlay fixed inset-0 z-[70] bg-slate-900/60 flex items-center justify-center overflow-y-auto"
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="confirm-close-title"
       aria-describedby="confirm-close-desc"
     >
-      <div className="clay-surface rounded-[32px] p-6 sm:p-7 w-full max-w-sm border-2 border-white flex flex-col items-center gap-4 text-center shadow-2xl">
+      <div className="clay-surface rounded-[32px] p-6 sm:p-7 w-full max-w-sm border-2 border-white flex flex-col items-center gap-4 text-center shadow-2xl my-auto">
         <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center border-2 border-amber-200 shadow-inner">
           <HelpCircle className="w-8 h-8 stroke-[2.5]" />
         </div>

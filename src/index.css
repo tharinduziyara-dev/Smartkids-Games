@@ -4,6 +4,20 @@
   :root {
     --font-display: 'Fredoka', system-ui, -apple-system, sans-serif;
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --safe-top-fallback: 0px;
+    --safe-bottom-fallback: 0px;
+    --safe-top: max(env(safe-area-inset-top, 0px), var(--safe-top-fallback));
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom-fallback));
+    --safe-left: env(safe-area-inset-left, 0px);
+  }
+
+  /* Ensure installed Android/iOS PWAs & fullscreen WebViews always clear the status bar & gesture nav bar */
+  @media (display-mode: standalone), (display-mode: fullscreen) {
+    :root {
+      --safe-top-fallback: 28px;
+      --safe-bottom-fallback: 12px;
+    }
   }
 
   html,
@@ -18,6 +32,55 @@
   h1, h2, h3, .font-display {
     font-family: var(--font-display);
   }
+}
+
+/* SafeArea / Window Insets Utilities for Edge-to-Edge & Notches */
+.safe-screen {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 32px);
+  padding-right: calc(var(--safe-right) + 0.75rem);
+  padding-bottom: calc(var(--safe-bottom) + 0.75rem);
+  padding-left: calc(var(--safe-left) + 0.75rem);
+}
+
+@media (min-width: 640px) {
+  .safe-screen {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 32px);
+    padding-right: calc(var(--safe-right) + 1.5rem);
+    padding-bottom: calc(var(--safe-bottom) + 1rem);
+    padding-left: calc(var(--safe-left) + 1.5rem);
+  }
+}
+
+.safe-hud-top {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 32px);
+  padding-right: calc(var(--safe-right) + 0.75rem);
+  padding-left: calc(var(--safe-left) + 0.75rem);
+}
+
+@media (min-width: 640px) {
+  .safe-hud-top {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 32px);
+    padding-right: calc(var(--safe-right) + 1.5rem);
+    padding-left: calc(var(--safe-left) + 1.5rem);
+  }
+}
+
+.safe-modal-overlay {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 32px);
+  padding-right: calc(var(--safe-right) + 0.75rem);
+  padding-bottom: calc(var(--safe-bottom) + 0.75rem);
+  padding-left: calc(var(--safe-left) + 0.75rem);
+}
+
+/* Global non-overlapping Flexbox header bar */
+.app-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 /* Playful 3D Clay / Glossy Toy Surface Utilities */

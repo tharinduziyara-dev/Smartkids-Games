@@ -28,7 +28,7 @@ export function ParentalLockOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-gradient-to-b from-[#17153B] via-[#262364] to-[#1E293B] flex items-center justify-center p-4 overflow-y-auto"
+      className="safe-modal-overlay fixed inset-0 z-50 bg-gradient-to-b from-[#17153B] via-[#262364] to-[#1E293B] flex items-center justify-center overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={t.breakTitle}

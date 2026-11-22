@@ -14,7 +14,7 @@ import { FlightOriginRect, FullScreenFlightLayer } from './FullScreenFlightLayer
 interface MusicalFairyProps {
   mood: MascotMood;
   message?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'avatar' | 'sm' | 'md' | 'lg' | 'xl';
   streak?: number;
   equipped?: EquippedWardrobe;
   interactive?: boolean;
@@ -60,20 +60,23 @@ function FairySvg({
 
   const flappingFast = isDancing || isFlyingLoop || trick === 'magic';
 
+  const wingAuraId = `${idPrefix}_fairyWingAura`;
+
   return (
     <svg
       viewBox="0 0 210 210"
-      className="w-full h-full drop-shadow-[0_12px_14px_rgba(190,24,93,0.16)]"
+      className="w-full h-full drop-shadow-[0_14px_18px_rgba(236,72,153,0.22)]"
     >
       <defs>
         <radialGradient id={skinGradId} cx="42%" cy="35%" r="68%">
-          <stop offset="0%" stopColor="#FFF1E6" />
-          <stop offset="100%" stopColor="#FCD5B5" />
+          <stop offset="0%" stopColor="#FFF5ED" />
+          <stop offset="68%" stopColor="#FDE2CA" />
+          <stop offset="100%" stopColor="#F7C59F" />
         </radialGradient>
 
         <linearGradient id={hairGradId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FBBF24" />
-          <stop offset="55%" stopColor="#F59E0B" />
+          <stop offset="0%" stopColor="#FDE047" />
+          <stop offset="50%" stopColor="#F59E0B" />
           <stop offset="100%" stopColor="#D97706" />
         </linearGradient>
 
@@ -83,16 +86,25 @@ function FairySvg({
         </linearGradient>
 
         <linearGradient id={wingsGradId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={wingsItem.primaryColor} stopOpacity="0.92" />
-          <stop offset="100%" stopColor={wingsItem.secondaryColor} stopOpacity="0.78" />
+          <stop offset="0%" stopColor="#FCE7F3" stopOpacity="0.96" />
+          <stop offset="50%" stopColor={wingsItem.primaryColor} stopOpacity="0.9" />
+          <stop offset="100%" stopColor={wingsItem.secondaryColor} stopOpacity="0.82" />
         </linearGradient>
+
+        <radialGradient id={wingAuraId} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FDF2F8" stopOpacity="0.95" />
+          <stop offset="100%" stopColor="#F472B6" stopOpacity="0" />
+        </radialGradient>
       </defs>
 
       {!isFlyingLoop && (
-        <ellipse cx="105" cy="194" rx="44" ry="7" fill="rgba(30, 58, 138, 0.12)" />
+        <ellipse cx="105" cy="195" rx="44" ry="7" fill="rgba(219, 39, 119, 0.14)" />
       )}
 
-      {/* Glowing Fairy Wings (Flap fast in flight, droop down when collapsed) */}
+      {/* Subtle Magical Aura behind wings */}
+      <circle cx="105" cy="112" r="78" fill={`url(#${wingAuraId})`} opacity="0.45" />
+
+      {/* Shimmering Pastel Butterfly Wings */}
       <motion.g
         style={{ transformOrigin: '105px 115px' }}
         animate={
@@ -102,7 +114,7 @@ function FairySvg({
             ? { scaleX: [1, 0.56, 1.08, 0.58, 1] }
             : flappingFast
             ? { scaleX: [1, 0.72, 1.05, 0.75, 1] }
-            : { scaleX: [1, 0.9, 1] }
+            : { scaleX: [1, 0.91, 1] }
         }
         transition={
           isConfused
@@ -115,31 +127,36 @@ function FairySvg({
         }
       >
         <path
-          d="M 94 110 C 50 56, 16 74, 34 114 C 46 136, 76 128, 94 120 Z"
+          d="M 94 110 C 46 48, 12 70, 30 114 C 44 140, 76 130, 94 120 Z"
           fill={`url(#${wingsGradId})`}
           stroke="#FFFFFF"
-          strokeWidth="2.5"
+          strokeWidth="2.6"
         />
         <path
-          d="M 94 122 C 56 122, 32 148, 52 164 C 68 176, 86 152, 94 132 Z"
+          d="M 94 122 C 52 122, 26 150, 48 168 C 66 180, 86 154, 94 132 Z"
           fill={`url(#${wingsGradId})`}
           stroke="#FFFFFF"
-          strokeWidth="2.2"
+          strokeWidth="2.3"
         />
         <path
-          d="M 116 110 C 160 56, 194 74, 176 114 C 164 136, 134 128, 116 120 Z"
+          d="M 116 110 C 164 48, 198 70, 180 114 C 166 140, 134 130, 116 120 Z"
           fill={`url(#${wingsGradId})`}
           stroke="#FFFFFF"
-          strokeWidth="2.5"
+          strokeWidth="2.6"
         />
         <path
-          d="M 116 122 C 154 122, 178 148, 158 164 C 142 176, 124 152, 116 132 Z"
+          d="M 116 122 C 158 122, 184 150, 162 168 C 144 180, 124 154, 116 132 Z"
           fill={`url(#${wingsGradId})`}
           stroke="#FFFFFF"
-          strokeWidth="2.2"
+          strokeWidth="2.3"
         />
-        <circle cx="48" cy="96" r="4" fill={wingsItem.accentColor} opacity="0.9" />
-        <circle cx="162" cy="96" r="4" fill={wingsItem.accentColor} opacity="0.9" />
+        {/* Iridescent lacy wing veins & shimmer dots */}
+        <path d="M 88 112 Q 56 84 40 94" fill="none" stroke="#FFFFFF" strokeWidth="1.5" opacity="0.7" />
+        <path d="M 122 112 Q 154 84 170 94" fill="none" stroke="#FFFFFF" strokeWidth="1.5" opacity="0.7" />
+        <circle cx="48" cy="94" r="4.5" fill={wingsItem.accentColor} opacity="0.92" />
+        <circle cx="162" cy="94" r="4.5" fill={wingsItem.accentColor} opacity="0.92" />
+        <circle cx="58" cy="148" r="3" fill="#FFFFFF" opacity="0.85" />
+        <circle cx="152" cy="148" r="3" fill="#FFFFFF" opacity="0.85" />
       </motion.g>
 
       {/* Legs */}
@@ -220,45 +237,54 @@ function FairySvg({
           strokeWidth="10"
           strokeLinecap="round"
         />
+        {/* Wand Glow Halo */}
+        <circle cx="179" cy="64" r="16" fill="#FDE047" opacity="0.28" />
         <line
           x1="156"
           y1="104"
           x2="178"
           y2="68"
           stroke="#FDE047"
-          strokeWidth="4.5"
+          strokeWidth="4.8"
           strokeLinecap="round"
         />
         <motion.path
-          animate={{ scale: [0.92, 1.18, 0.92], rotate: [0, 15, 0] }}
-          transition={{ duration: 1.2, repeat: Infinity }}
+          animate={{ scale: [0.92, 1.22, 0.92], rotate: [0, 18, 0] }}
+          transition={{ duration: 1.15, repeat: Infinity }}
           style={{ transformOrigin: '179px 64px' }}
-          d="M179 50 L183 59 L193 61 L185 67 L187 77 L179 72 L171 77 L173 67 L165 61 L175 59 Z"
+          d="M179 49 L183.5 58.5 L194 61 L185.5 67.5 L187.5 78 L179 72.5 L170.5 78 L172.5 67.5 L164 61 L174.5 58.5 Z"
           fill="#FACC15"
           stroke="#FFFFFF"
-          strokeWidth="1.8"
+          strokeWidth="2"
         />
       </motion.g>
 
-      {/* Equipped Dress */}
+      {/* Equipped Layered Petal Fairy Dress */}
       <g>
         <path
           d="M 85 106 L 125 106 L 122 132 L 88 132 Z"
           fill={`url(#${dressGradId})`}
           stroke="#FFFFFF"
-          strokeWidth="1.5"
+          strokeWidth="1.6"
         />
+        {/* Layered fairy petal skirt */}
         <path
-          d="M 88 128 Q 70 154 68 164 Q 105 174 142 164 Q 140 154 122 128 Z"
+          d="M 88 128 Q 66 154 65 166 Q 85 174 105 164 Q 125 174 145 166 Q 144 154 122 128 Z"
           fill={`url(#${dressGradId})`}
           stroke="#FFFFFF"
-          strokeWidth="2"
+          strokeWidth="2.1"
           strokeLinejoin="round"
         />
-        <rect x="87" y="125" width="36" height="5" rx="2.5" fill={dressItem.accentColor} />
-        <circle cx="92" cy="148" r="3" fill={dressItem.accentColor} opacity="0.9" />
-        <circle cx="105" cy="154" r="3.5" fill={dressItem.accentColor} opacity="0.95" />
-        <circle cx="118" cy="148" r="3" fill={dressItem.accentColor} opacity="0.9" />
+        <path
+          d="M 92 129 Q 82 149 84 156 Q 105 163 126 156 Q 128 149 118 129 Z"
+          fill={dressItem.accentColor}
+          opacity="0.28"
+        />
+        <rect x="86" y="125" width="38" height="5.5" rx="2.75" fill={dressItem.accentColor} />
+        <circle cx="105" cy="127.7" r="3" fill="#FDE047" stroke="#FFFFFF" strokeWidth="1" />
+        <circle cx="90" cy="148" r="2.8" fill="#FFFFFF" opacity="0.9" />
+        <circle cx="105" cy="153" r="3.4" fill={dressItem.accentColor} opacity="0.95" />
+        <circle cx="120" cy="148" r="2.8" fill="#FFFFFF" opacity="0.9" />
       </g>
 
       {/* Hair Back & Buns */}
@@ -277,10 +303,20 @@ function FairySvg({
       <ellipse cx="86" cy="86" rx="6.5" ry="4" fill="#FB7185" opacity={isDancing || isFlyingLoop ? 0.7 : 0.45} />
       <ellipse cx="124" cy="86" rx="6.5" ry="4" fill="#FB7185" opacity={isDancing || isFlyingLoop ? 0.7 : 0.45} />
 
-      {/* Equipped Crown / Tiara */}
+      {/* Starry Tiara + Equipped Crown */}
       <g>
+        {/* Subtle sparkling tiara base so Sparkle Fairy always has a princess tiara */}
+        <path
+          d="M 89 47 L 95 36 L 105 42 L 115 36 L 121 47 Z"
+          fill="#FDE047"
+          stroke="#FFFFFF"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+        <circle cx="105" cy="39" r="2.6" fill="#F472B6" />
+
         {crownItem.id === 'crown_flower' && (
-          <g transform="translate(126, 48)">
+          <g transform="translate(127, 49)">
             <circle cx="0" cy="-5" r="5" fill={crownItem.secondaryColor} />
             <circle cx="5" cy="0" r="5" fill={crownItem.secondaryColor} />
             <circle cx="0" cy="5" r="5" fill={crownItem.secondaryColor} />
@@ -406,16 +442,21 @@ function FairySvg({
             transition={{ duration: 3.8, repeat: Infinity, times: [0, 0.92, 0.96, 1] }}
             style={{ transformOrigin: '93px 76px' }}
           >
-            <circle cx="93" cy="76" r="5.8" fill="#1E1B4B" />
-            <circle cx="95" cy="74" r="2.2" fill="#FFFFFF" />
+            {/* Delicate upper eyelashes */}
+            <path d="M 85 72 L 88 74 M 88 69 L 90 72" stroke="#1E1B4B" strokeWidth="1.7" strokeLinecap="round" />
+            <circle cx="93" cy="76" r="6.4" fill="#1E1B4B" />
+            <circle cx="95.4" cy="73.5" r="2.4" fill="#FFFFFF" />
+            <circle cx="91.2" cy="78.5" r="1.1" fill="#FFFFFF" opacity="0.85" />
           </motion.g>
           <motion.g
             animate={{ scaleY: [1, 1, 0.1, 1] }}
             transition={{ duration: 3.8, repeat: Infinity, times: [0, 0.92, 0.96, 1] }}
             style={{ transformOrigin: '117px 76px' }}
           >
-            <circle cx="117" cy="76" r="5.8" fill="#1E1B4B" />
-            <circle cx="119" cy="74" r="2.2" fill="#FFFFFF" />
+            <path d="M 125 72 L 122 74 M 122 69 L 120 72" stroke="#1E1B4B" strokeWidth="1.7" strokeLinecap="round" />
+            <circle cx="117" cy="76" r="6.4" fill="#1E1B4B" />
+            <circle cx="119.4" cy="73.5" r="2.4" fill="#FFFFFF" />
+            <circle cx="115.2" cy="78.5" r="1.1" fill="#FFFFFF" opacity="0.85" />
           </motion.g>
         </g>
       )}
@@ -531,10 +572,14 @@ export function MusicalFairy({
   const isWinking = trick === 'wink';
 
   const dimensions =
-    size === 'sm'
+    size === 'avatar'
+      ? 'w-9 h-9'
+      : size === 'sm'
       ? 'w-24 h-24 sm:w-28 sm:h-28'
       : size === 'lg'
       ? 'w-32 h-32 sm:w-40 sm:h-40'
+      : size === 'xl'
+      ? 'w-[196px] h-[196px] sm:w-[248px] sm:h-[248px]'
       : 'w-28 h-28 sm:w-36 sm:h-36';
 
   const handleClick = () => {

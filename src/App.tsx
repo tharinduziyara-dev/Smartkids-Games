@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AppCategory,
+  DEFAULT_UNLOCKED_CHARACTERS,
   DifficultyLevel,
   EnglishMode,
   GameMode,
@@ -29,7 +30,7 @@ import {
 } from './utils/parentalStorage';
 import { soundEngine } from './audio/soundEngine';
 import { stopSpeaking } from './utils/speech';
-import { TitleScreen } from './components/TitleScreen';
+import { TitleScreen, HomeScreenStep } from './components/TitleScreen';
 import { GameStage } from './components/GameStage';
 import { MathStage } from './components/MathStage';
 import { EnglishStage } from './components/EnglishStage';
@@ -43,9 +44,11 @@ import { ParentalSettingsModal } from './components/ParentalSettingsModal';
 import { DictionaryModal } from './components/DictionaryModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { AppLanguage, loadLanguage, saveLanguage } from './i18n/translations';
+import { initializeAdMob, prepareRewardedAd } from './admob';
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>('TITLE_MENU');
+  const [screenStep, setScreenStep] = useState<HomeScreenStep>('CHARACTER_SELECT');
   const [selectedCategory, setSelectedCategory] = useState<AppCategory | null>(null);
   const [activeMusicMode, setActiveMusicMode] = useState<GameMode>('GUESS_NOTE');
   const [activeMathMode, setActiveMathMode] = useState<MathMode>('ADDITION');
@@ -58,6 +61,9 @@ export default function App() {
   const [language, setLanguage] = useState<AppLanguage>(() => loadLanguage());
 
   const [store, setStore] = useState<ProfilesStore>(() => loadProfilesStore());
+  // Session-only character unlocks from Rewarded Ads (never persisted to localStorage)
+  const [sessionUnlockedCharacters, setSessionUnlockedCharacters] = useState<MascotId[]>([]);
+  const [sessionMascotsByProfile, setSessionMascotsByProfile] = useState<Record<string, MascotId>>({});
   const [parental, setParental] = useState<ParentalSettings>(() =>
     loadParentalSettings()
   );
@@ -72,12 +78,37 @@ export default function App() {
     intensity: 'small' | 'big';
   }>({ trigger: 0, intensity: 'small' });
 
+  const sessionUnlockedSet = useMemo(
+    () =>
+      new Set<MascotId>([
+        ...DEFAULT_UNLOCKED_CHARACTERS,
+        ...sessionUnlockedCharacters,
+      ]),
+    [sessionUnlockedCharacters]
+  );
+
+  const profilesForSession = useMemo(() => {
+    const unlockedList = Array.from(sessionUnlockedSet);
+    return store.profiles.map((p) => {
+      const overrideMascot = sessionMascotsByProfile[p.id];
+      const effectiveMascot =
+        overrideMascot && sessionUnlockedSet.has(overrideMascot)
+          ? overrideMascot
+          : p.mascot;
+      return {
+        ...p,
+        mascot: effectiveMascot,
+        unlockedCharacters: unlockedList,
+      };
+    });
+  }, [store.profiles, sessionMascotsByProfile, sessionUnlockedSet]);
+
   const activeProfile = useMemo(() => {
     return (
-      store.profiles.find((p) => p.id === store.activeProfileId) ??
-      store.profiles[0]
+      profilesForSession.find((p) => p.id === store.activeProfileId) ??
+      profilesForSession[0]
     );
-  }, [store]);
+  }, [profilesForSession, store.activeProfileId]);
 
   useEffect(() => {
     saveProfilesStore(store);
@@ -93,6 +124,15 @@ export default function App() {
       document.documentElement.lang = language === 'si' ? 'si' : 'en';
     }
   }, [language]);
+
+  // Initialize COPPA / Families-compliant AdMob (Rewarded Ads only, zero banners)
+  useEffect(() => {
+    void initializeAdMob().then((ready) => {
+      if (ready) {
+        void prepareRewardedAd();
+      }
+    });
+  }, []);
 
   // Ask confirmation before closing browser tab/window
   useEffect(() => {
@@ -330,20 +370,40 @@ export default function App() {
     ]
   );
 
-  const handleSelectMascot = useCallback((mascot: MascotId) => {
-    setStore((prev) => ({
-      ...prev,
-      profiles: prev.profiles.map((p) =>
-        p.id === prev.activeProfileId
-          ? {
-              ...p,
-              mascot,
-              unlockedItems: getUnlockedIdsForStars(p.totalStars, p.unlockedItems),
-            }
-          : p
-      ),
-    }));
-  }, []);
+  const handleSelectMascot = useCallback(
+    (mascot: MascotId) => {
+      if (DEFAULT_UNLOCKED_CHARACTERS.includes(mascot)) {
+        setSessionMascotsByProfile((prev) => {
+          if (!(activeProfile.id in prev)) return prev;
+          const next = { ...prev };
+          delete next[activeProfile.id];
+          return next;
+        });
+        setStore((prev) => ({
+          ...prev,
+          profiles: prev.profiles.map((p) =>
+            p.id === prev.activeProfileId
+              ? {
+                  ...p,
+                  mascot,
+                  unlockedItems: getUnlockedIdsForStars(
+                    p.totalStars,
+                    p.unlockedItems
+                  ),
+                }
+              : p
+          ),
+        }));
+      } else {
+        // Keep session-unlocked character selection in React state only
+        setSessionMascotsByProfile((prev) => ({
+          ...prev,
+          [activeProfile.id]: mascot,
+        }));
+      }
+    },
+    [activeProfile.id]
+  );
 
   const handleEquipItem = useCallback(
     (category: WardrobeCategory, itemId: string) => {
@@ -364,6 +424,48 @@ export default function App() {
     },
     []
   );
+
+  const handleUnlockCharacter = useCallback(
+    (mascot: MascotId) => {
+      // Unlock for current app session only (kept in React state, NOT localStorage)
+      setSessionUnlockedCharacters((prev) =>
+        prev.includes(mascot) ? prev : [...prev, mascot]
+      );
+      setSessionMascotsByProfile((prev) => ({
+        ...prev,
+        [activeProfile.id]: mascot,
+      }));
+      setConfettiState((prev) => ({
+        trigger: prev.trigger + 1,
+        intensity: 'big',
+      }));
+    },
+    [activeProfile.id]
+  );
+
+  const handleUnlockWardrobeItem = useCallback((item: WardrobeItem) => {
+    setStore((prev) => ({
+      ...prev,
+      profiles: prev.profiles.map((p) => {
+        if (p.id !== prev.activeProfileId) return p;
+        const nextItems = p.unlockedItems.includes(item.id)
+          ? p.unlockedItems
+          : [...p.unlockedItems, item.id];
+        return {
+          ...p,
+          unlockedItems: nextItems,
+          equippedWardrobe: {
+            ...p.equippedWardrobe,
+            [item.category]: item.id,
+          },
+        };
+      }),
+    }));
+    setConfettiState((prev) => ({
+      trigger: prev.trigger + 1,
+      intensity: 'big',
+    }));
+  }, []);
 
   const handleSelectProfile = useCallback((profileId: string) => {
     setStore((prev) => ({
@@ -407,6 +509,7 @@ export default function App() {
     stopSpeaking();
     handleResetFlightProgress();
     setIsSkyRun(false);
+    setScreenStep('DASHBOARD');
     setGameState('TITLE_MENU');
   }, [handleResetFlightProgress]);
 
@@ -416,6 +519,7 @@ export default function App() {
     handleResetFlightProgress();
     setIsSkyRun(false);
     setSelectedCategory(null);
+    setScreenStep('DASHBOARD');
     setGameState('TITLE_MENU');
   }, [handleResetFlightProgress]);
 
@@ -435,16 +539,19 @@ export default function App() {
         {gameState === 'TITLE_MENU' ? (
           <TitleScreen
             profile={activeProfile}
+            screenStep={screenStep}
             selectedCategory={selectedCategory}
             instrument={instrument}
             level={level}
             muted={muted}
             language={language}
+            onChangeScreenStep={setScreenStep}
             onChangeLanguage={setLanguage}
             onSelectCategory={setSelectedCategory}
             onSelectInstrument={setInstrument}
             onSelectLevel={setLevel}
             onSelectMascot={handleSelectMascot}
+            onUnlockCharacter={handleUnlockCharacter}
             onOpenProfiles={() => setShowProfiles(true)}
             onOpenWardrobe={() => setShowWardrobe(true)}
             onOpenRewards={() => setShowRewards(true)}
@@ -535,7 +642,7 @@ export default function App() {
 
       {showProfiles && !parental.isLocked && (
         <ProfileModal
-          profiles={store.profiles}
+          profiles={profilesForSession}
           activeProfileId={activeProfile.id}
           language={language}
           onSelectProfile={handleSelectProfile}
@@ -550,6 +657,7 @@ export default function App() {
           profile={activeProfile}
           language={language}
           onEquipItem={handleEquipItem}
+          onUnlockItem={handleUnlockWardrobeItem}
           onClose={() => setShowWardrobe(false)}
         />
       )}

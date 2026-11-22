@@ -84,23 +84,23 @@ export function DictionaryModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-slate-900/55 flex items-center justify-center p-2.5 sm:p-5 overflow-y-auto"
+      className="safe-modal-overlay fixed inset-0 z-50 bg-slate-900/55 flex items-center justify-center overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={t.title}
     >
-      <div className="clay-surface rounded-[32px] p-4 sm:p-7 w-full max-w-3xl border-2 border-white flex flex-col gap-3 sm:gap-4 my-auto max-h-[94dvh] overflow-y-auto">
+      <div className="clay-surface rounded-[32px] p-4 sm:p-7 w-full max-w-3xl border-2 border-white flex flex-col gap-3 sm:gap-4 my-auto max-h-[88dvh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2.5">
+        <div className="app-header-bar">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
               <BookOpen className="w-5 h-5" />
             </div>
-            <div>
-              <h2 className="font-display text-xl sm:text-3xl font-bold text-slate-900 leading-none">
+            <div className="min-w-0 flex-1">
+              <h2 className="font-display text-lg sm:text-3xl font-bold text-slate-900 leading-none truncate">
                 {t.title}
               </h2>
-              <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
+              <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5 truncate">
                 {t.subtitle}
               </p>
             </div>
@@ -111,12 +111,14 @@ export function DictionaryModal({
             onClick={handleRequestClose}
             aria-label="Close dictionary"
             style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
-            className="toy-btn w-11 h-11 rounded-2xl bg-white text-slate-700 flex items-center justify-center border-2 border-slate-200 cursor-pointer shrink-0"
+            className="toy-btn w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white text-slate-700 flex items-center justify-center border-2 border-slate-200 cursor-pointer shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Scrollable Content Underneath Header */}
+        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 sm:gap-4 pr-0.5">
         {/* Selected Word Spotlight */}
         <div
           ref={spotlightRef}
@@ -306,6 +308,7 @@ export function DictionaryModal({
             })}
           </div>
         )}
+        </div>
       </div>
 
       <ConfirmCloseDialog
