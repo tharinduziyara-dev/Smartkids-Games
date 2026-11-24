@@ -36,6 +36,10 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Update minSdkVersion to 24
+        run: |
+          sed -i 's/minSdkVersion = 23/minSdkVersion = 24/g' android/variables.gradle
+
       - name: Add AdMob App ID to AndroidManifest
         run: |
           sed -i 's/<\/application>/<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-7219225410567354~9748668868"\/><\/application>/' android/app/src/main/AndroidManifest.xml
