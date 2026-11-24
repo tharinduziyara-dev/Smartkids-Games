@@ -44,9 +44,9 @@ jobs:
         run: |
           sed -i 's/<\/application>/<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-7219225410567354~9748668868"\/><\/application>/' android/app/src/main/AndroidManifest.xml
 
-      - name: Generate Upload Keystore
+      - name: Decode Existing Upload Keystore
         run: |
-          keytool -genkey -v -keystore android/app/smartkids-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias smartkids -storepass SmartKids2026 -keypass SmartKids2026 -dname "CN=Tharindu, OU=Dev, O=SmartKids, L=Ingiriya, S=Western, C=LK"
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/smartkids-upload.jks
 
       - name: Build Signed Release AAB
         run: |
@@ -54,10 +54,8 @@ jobs:
           chmod +x gradlew
           ./gradlew bundleRelease --no-daemon -Pandroid.injected.signing.store.file="$(pwd)/app/smartkids-upload.jks" -Pandroid.injected.signing.store.password=SmartKids2026 -Pandroid.injected.signing.key.alias=smartkids -Pandroid.injected.signing.key.password=SmartKids2026
 
-      - name: Upload Play Store AAB & Keystore
+      - name: Upload Play Store AAB
         uses: actions/upload-artifact@v4
         with:
-          name: SmartKids-PlayStore-AAB
-          path: |
-            android/app/build/outputs/bundle/release/app-release.aab
-            android/app/smartkids-upload.jks
+          name: SmartKids-PlayStore-AAB-Fixed
+          path: android/app/build/outputs/bundle/release/app-release.aab
